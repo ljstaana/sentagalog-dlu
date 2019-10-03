@@ -1,0 +1,56 @@
+{}{% extends "layouts/topbar.html" %}
+
+{% block topbar %}
+    {% include "sections/topbar.html" %}
+{% endblock %}
+
+{% block main_content %}
+    <div class="dashboard-content" id="app"> 
+        <h2>View Users</h2>
+        
+        <table style="margin: 10px;">
+            <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Labels</th>
+            </tr>
+            {% for user in users: %}
+                <tr>
+                    <td>{{user.id}}</td>
+                    <td>{{user.username}}</td>
+                    <td>{{user.role}}</td>
+                    <td>{{user.nlabels}}</td>
+                    <td><button @click="remove_user(user.id)">Remove User</button></td>
+                </tr>
+            {% endfor %}
+            </table>
+       
+    </div>
+    <style>
+        .dashboard-content {
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .dashboard-content h3 {
+            font-size: 22px;
+        }
+    </style>
+    <script>
+        new Vue({
+            el: "#app", 
+            methods: {
+                remove_user(id) {
+                    axios.post("/api/delete_user", {
+                        id 
+                    }).then((response) => {
+                        alert("Succesfully deleted user.") 
+                        window.reload = "" 
+                    }).catch((error) => {
+                        alert("There was an error deleting user.")
+                    })
+                }
+            }
+        })
+    </script>
+{% endblock %}

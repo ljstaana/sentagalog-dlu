@@ -112,6 +112,7 @@
                     self.sentiment = null
                 },
                 set_sent(sent) {
+                    navigator.vibrate([100])
                     let self = this
                     this.reset_sent()
                     self.sentiment = self.get_sent_code(sent)
@@ -136,6 +137,8 @@
                             tweet_id : this.tweet[0]
                         }
                         let self = this
+                        navigator.vibrate([200])
+
                         axios.post("/api/submit_label", data)
                                 .then((response) => {
                                     if(response.data.state == "successful") {
@@ -154,6 +157,8 @@
                     this.reason_for_sentiment = this.buff_reason
                 }, 
                 label_another() {
+                    navigator.vibrate([200])
+
                     this.reset_sent()
                     this.notifier = false
                     this.reason_for_sentiment = ""

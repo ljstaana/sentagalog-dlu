@@ -8,6 +8,7 @@ class User(db.Model):
     password = db.Column(db.String(64), index=True) 
     first_name = db.Column(db.String(120), index=True)
     last_name = db.Column(db.String(120), index=True)
+    role = db.Column(db.Integer)
 
     def __repr__(self): 
         return '<User {}>'.format(self.username)

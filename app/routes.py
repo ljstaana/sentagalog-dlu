@@ -1,6 +1,9 @@
 from app import app
 from flask import Flask, session, render_template, url_for, request, redirect
 
+ADMIN = 1
+VOLUNTEER = 2
+
 # / - splash screen
 @app.route('/')
 def splash():
@@ -20,6 +23,7 @@ def login():
     print(user)
     if len(user) == 1:
         session["username"] = user[0].username
+        session["role"] = user[0].role
     return {
         "user" : [username]
     }
@@ -35,7 +39,8 @@ def logout():
 def dashboard(): 
     if 'username' in session:
         return render_template('dashboard.html', 
-            username=session["username"])
+            username=session["username"],
+            session=session)
     else: 
         return render_template('splash.html')
 
@@ -44,7 +49,8 @@ def dashboard():
 def view_dataset(): 
     if 'username' in session:
         return render_template('view_dataset.html', 
-            username=session["username"])
+            username=session["username"],
+            session=session)
     else: 
         return render_template('splash.html')
 
@@ -110,7 +116,8 @@ def view_charts_and_stats():
         from app.models import Tweet
         from app.models import User 
         return render_template("view_charts_and_stats.html",
-                username=session["username"]
+                username=session["username"],
+                session=session
         )
     else: 
         return render_template("splash.html")
@@ -122,7 +129,9 @@ def label_random_tweet():
         from app.models import Tweet 
         from app.models import User 
         return render_template("label_random_tweet.html",
-            username=session["username"]) 
+            username=session["username"],
+            session=session
+        )
     else: 
         return render_template("splash.html")
 
@@ -136,7 +145,8 @@ def label_specific_tweet():
         tweet_id = request.args.get("tweet_id")
         return render_template("label_specific_tweet.html",
             username=session["username"],
-            tweet_id=tweet_id) 
+            tweet_id=tweet_id,
+            session=session) 
     else: 
         return render_template("splash.html")
 
@@ -193,7 +203,8 @@ def view_label_history():
             limit=limit, 
             page=page, 
             offset=offset, 
-            total=total)
+            total=total,
+            session=session)
     else: 
         return render_template("splash.html")
 
@@ -244,7 +255,43 @@ def my_labels():
             limit=limit,
             page=page, 
             offset=offset,
-            total=total
+            total=total,
+            session=session
+        )
+    else: 
+        return render_template("splash.html")
+
+@app.route("/create_user") 
+def create_user():
+    if 'username' in session:
+        if session['role'] == 1: 
+            return render_template("create_user.html",
+                username=session["username"],
+                session=session)
+        else: 
+            return "You are not permitted in this page. Sorry." 
+    else: 
+        return render_template("splash.html")
+
+
+@app.route("/view_users")
+def view_users(): 
+    if 'username' in session: 
+        from app.models import User 
+        from app.models import Tweet
+        from app import db
+        users = db.session.query(User)\
+                  .all() 
+        
+        
+        for user in users: 
+            nlabels = Tweet.query.filter_by(labeller=user.id).count()
+            user.nlabels = nlabels 
+
+        return render_template("view_users.html",
+            username=session["username"],
+            users=users,
+            session=session
         )
     else: 
         return render_template("splash.html")
@@ -418,3 +465,41 @@ def api_submit_label():
             return {
                 "state" : "unsuccessful"
             }
+
+
+@app.route("/api/create_user", methods=["POST"])
+def api_create_user(): 
+    if 'username' in session: 
+        if session['role'] == ADMIN:  
+            from app import db 
+            from app.models import User 
+            user = request.json.get('user', {})
+            new_user = User(
+                username=user["username"], 
+                first_name=user["first_name"], 
+                last_name=user["last_name"], 
+                password=user["password"], 
+                role=user["role"]
+            )
+            db.session.add(new_user)
+            db.session.commit()
+
+            return "success"
+        else: 
+            return "You are not allowed to access this resource."
+    else: 
+        return "You are not allowed to access this resource."
+
+@app.route("/api/delete_user", methods=["POST"]) 
+def api_delete_user(): 
+    if 'username' in session: 
+        if session['role'] == ADMIN:
+            from app import db 
+            from app.models import User
+            user_id = request.json.get("id") 
+            User.delete.filter_by(user_id=user_id)
+            return "success"
+        else: 
+            return "You are not allowed to access this resource."
+    else: 
+        return "You are not allowed to access this resource"

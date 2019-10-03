@@ -4,23 +4,29 @@
             <h1 class="topbar-text" @click="window.location='/dashboard'">SDL Utility Tool</h1>
         </div> 
         <div class="spacer" align="right">
-            <span>
-                {{username}}
-            </span>
+            <span class="username" style="color: yellow;">
+                @{{username}}
+            </span> 
         </div>
         <div class="menu-icon">
-            <div class="icon" @click="toggle_menu">|||</div>
+            <div class="icon" @click="toggle_menu">
+                <img width="50" src="{{url_for('static', filename='images/burger.jpg')}}">
+            </div>
         </div>
     </div>
     <div class="menu">
         <ul>
+            <li><a href="view_users">View Users</a></li>
             <li><a href="view_dataset">View Dataset</a></li>
             <li><a href="view_charts_stats">View Charts & Stats</a></li>
             <li><a href="label_random_tweet">Label Random Tweet</a></li>
             <li><a href="label_specific_tweet">Label Specific Tweet</a></li>
             <li><a href="my_labels">My Labels</a></li>
             <li><a href="label_history">Label History</a></li>
-            <li><a href="download_csv">Download CSV</a></li>
+            {% if session["role"] == 1: %}
+                <li><a href="create_user">Create User</a></li>
+                <li><a href="download_csv">Download CSV</a></li>
+            {% endif %}
             <li><a href="logout">Logout</a></li>
         </ul>
     </div>
@@ -71,25 +77,33 @@
         font-size: 25px;
         margin-top: 5px;
         margin-left: 5px;
-        flex: 20%;
+        flex: 60%;
     }
 
     .spacer {
-        flex: 35%;
+        flex: 20%;
         padding-top: 8px;
+        color: white;
+        text-align: right;
+        padding-left: 50px;
     }
 
     .menu-icon {
-        flex: 20%;
+        flex: 5%;
         text-align: right;
+        margin-top: -5px;
     }
 
-    .menu-icon .icon {
-        transform: rotate(90deg);
-        transform-origin: center;
-        margin-top: -20px;
-        margin-left: 20px;
-        font-size: 25px;
+    .menu-icon:active {
+        opacity: 0.5;
+    }
+
+    
+    .username {
+        display: block;
+        margin-top: 0px;
+        margin-right: 10px;
+        text-align: right;
     }
 </style>
 <script>
@@ -101,6 +115,7 @@
         methods: {
             toggle_menu () {
                 $(".menu").slideToggle()
+                navigator.vibrate([100])
             }
         },
         mounted() {
