@@ -1,0 +1,74 @@
+{% extends "layouts/topbar.html" %} 
+
+{% block topbar %}
+    {% include "sections/topbar.html" %}
+{% endblock %}
+
+
+{% block main_content %}
+    <div class="dashboard-content" id="app">
+        <h2>Label History</h2> 
+        Showing {{(page) * limit}} - {{(page) * limit + 1}} of {{total}} labels
+        <hr />
+        {% for label in label_logs: %}
+            <table>
+                <tr>
+                    <td colspan="2">
+                        {{label.tweet_text}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Timestamp</td>
+                    <td>{{label.created_date}}</td>
+                </tr>
+                <tr>
+                    <td>Username</td>
+                    <td>{{label.username}}</td>
+                </tr>
+                <tr>
+                    <td>Tweet ID</td>
+                    <td>{{label.tweet_id}}</td>
+                </tr>
+                <tr>
+                    <td>Sentiment</td>
+                    {% if label.sentiment == 0: %}
+                        <td>Neutral</td>
+                    {% elif label.sentiment == 1: %}
+                        <td>Positive</td>
+                    {% else: %}
+                        <td>Neutral</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>Reason</td>
+                    <td>{{label.reason_for_sentiment}}</td>
+                </tr>
+                <tr>
+                    <td>Actions</td>
+                    <td>
+                        <a href="/label_specific_tweet?tweet_id={{label.tweet_id}}">
+                            <button>Relabel Tweet?</button>
+                        </a>
+                    </td>
+                </tr>
+            </table>
+        {% endfor %}
+        <hr />
+        <a href="/label_history?page={{page-1}}"><button>Previous</button></a>
+        <a href="/label_history?page={{page+1}}"><button>Next</button></a>
+    </div>
+    <style>
+        .dashboard-content {
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .dashboard-content h3 {
+            font-size: 22px;
+        }
+    </style>
+    <script> 
+        new Vue({
+            el: "#app"
+        })
+    </script>
+{% endblock %}

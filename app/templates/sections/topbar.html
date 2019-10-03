@@ -1,0 +1,110 @@
+<div class="topbar">
+    <div class="topbar-container" id="topbar">
+        <div class="title">
+            <h1 class="topbar-text" @click="window.location='/dashboard'">SDL Utility Tool</h1>
+        </div> 
+        <div class="spacer" align="right">
+            <span>
+                {{username}}
+            </span>
+        </div>
+        <div class="menu-icon">
+            <div class="icon" @click="toggle_menu">|||</div>
+        </div>
+    </div>
+    <div class="menu">
+        <ul>
+            <li><a href="view_dataset">View Dataset</a></li>
+            <li><a href="view_charts_stats">View Charts & Stats</a></li>
+            <li><a href="label_random_tweet">Label Random Tweet</a></li>
+            <li><a href="label_specific_tweet">Label Specific Tweet</a></li>
+            <li><a href="my_labels">My Labels</a></li>
+            <li><a href="label_history">Label History</a></li>
+            <li><a href="download_csv">Download CSV</a></li>
+            <li><a href="logout">Logout</a></li>
+        </ul>
+    </div>
+</div>
+<style scope>
+
+   
+
+    .menu {
+        color: white;
+        background-color: rgb(29, 122, 169);
+    }
+
+    .menu li {
+        list-style: none;
+        padding: 5px 10px;
+    }
+
+    .menu li a {
+        color: white;
+        text-decoration: none;
+    }
+
+    .menu li a:hover {
+        color: goldenrod;
+        text-decoration: none;
+    }
+
+    .menu li a:active {
+        color: yellow;
+        outline: none;
+    }
+
+
+    .menu ul {
+        padding: 10px;
+    }
+
+    .topbar-container {
+        display: flex;
+        background-color: rgb(59, 152, 199);
+        color: white;
+        font-size: 90%;
+        height: 40px;
+    }
+
+    .title .topbar-text {
+        font-size: 25px;
+        margin-top: 5px;
+        margin-left: 5px;
+        flex: 20%;
+    }
+
+    .spacer {
+        flex: 35%;
+        padding-top: 8px;
+    }
+
+    .menu-icon {
+        flex: 20%;
+        text-align: right;
+    }
+
+    .menu-icon .icon {
+        transform: rotate(90deg);
+        transform-origin: center;
+        margin-top: -20px;
+        margin-left: 20px;
+        font-size: 25px;
+    }
+</style>
+<script>
+    let topbar = new Vue({
+        el: "#topbar", 
+        data : {
+            show_menu : false
+        },  
+        methods: {
+            toggle_menu () {
+                $(".menu").slideToggle()
+            }
+        },
+        mounted() {
+            $(".menu").hide()
+        }
+    })
+</script>

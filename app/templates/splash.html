@@ -1,0 +1,134 @@
+{% extends "layouts/blank.html" %} 
+
+{% block content %}
+
+    <!-- Main Splash Screen Content -->
+    <div class="content-container" id="app">
+        <div class="logo-container">
+            <h1>SenTagalog DLU</h1>
+            <a>SenTagalog Data Labelling Utility</a>
+        </div>
+        <div class="login-form">
+            <input v-model="username" type="text" placeholder="Username">
+            <input v-model="password" type="password" placeholder="Password">
+            <button @click="authenticate">Authenticate</button>
+            <div v-if="error">
+                <div v-if="error" class="error_message">
+                    [[err_msg]]
+                </div>
+            </div>
+            <div v-if="notifier">
+                <div v-if="notifier" class="notifier_message">
+                    [[notifier_msg]]
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Only Notifier -->
+    <div class="mobile-only-notifier">
+        <br/>
+        <h3 class="logo" align="center">Sorry. Please view this app on mobile phones.</h3>
+    </div>
+
+    <style> 
+        @media screen and (max-width: 720px) {
+            body {
+         
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            .content-container {
+                text-align: center;
+                position: relative;
+                width: 100%;
+                height: 100%;
+                margin-top: 30%
+            }
+
+            .mobile-only-notifier {
+                display: none;
+            }
+
+            .content-container .logo-container h1 {
+                margin: 0;
+            }
+
+            .content-container .login-form {
+                margin-top: 50px;
+            }
+            
+            .error_message {
+                border: 2px solid #ff0000;
+                color: red;
+                width: 50%;
+                text-align: center; 
+                margin: 30px auto;
+                border-radius: 5px;
+                padding: 10px;
+            }
+
+            .notifier_message {
+                border: 2px solid rgb(33, 42, 155);
+                color:  rgb(33, 42, 155);
+                width: 50%;
+                text-align: center; 
+                margin: 30px auto;
+                border-radius: 5px;
+                padding: 10px;
+            }
+        }
+
+        @media screen and (min-width: 720px) {
+            .content-container {
+                display: none;
+            }
+            .mobile-only-notifier {
+                display: block;
+            }
+        }
+    </style>
+    
+    <script>
+        new Vue({
+            el : "#app",
+            data : {
+                username : "", 
+                password : "",
+                error: false,
+                notifier: false,
+                err_msg : "Invalid Credentials",
+                notifier_msg: "Logging you in..."
+            }, 
+            methods : {
+                authenticate () {
+                    let self = this
+                    let username = this.username 
+                    let password = this.password
+                    self.notifier = true 
+                    self.error = false
+                    
+                    axios.post("/login", { username, password })
+                         .then(function(response){
+                            self.notifier = false
+                            let user = response.data.user 
+                            if(user.length == 0) {
+                                self.error = true 
+                            } else {
+                                self.notifier = true 
+                                self.notifier_msg = "Success. Logging you in."
+                                window.location = ""
+                            }
+                         })
+                         .catch((error) => {
+                            self.error = true 
+                            self.notifier = false
+                            self.err_msg = "There was an error logging you in."
+                         })
+                }
+            },
+            delimiters : ["[[", "]]"]
+        })
+    </script>
+{% endblock %}

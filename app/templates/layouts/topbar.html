@@ -1,0 +1,39 @@
+<!DOCTYPE html> 
+<html lang="en">
+    <head>
+        <meta charset="utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SenTagalog - Data Labelling Utility</title>
+    
+        {% include "layouts/partials/header_embeds.html"%}
+    </head>
+    <body>
+        <div class="topbar_content">
+            {% block topbar %}
+               
+            {% endblock %}
+        </div>
+        <div class="main_content">
+            {% block main_content %}
+            
+            {% endblock %}
+        </div>
+        <style>
+            body {
+                margin: 0;
+                padding: 0
+            }
+            
+            .topbar_content {
+                position: fixed;
+                top: 0; 
+                left: 0;
+                width: 100%;
+            }
+            .main_content {
+                margin-top: 70px;
+            }
+          
+        </style>
+    </body>
+</html>

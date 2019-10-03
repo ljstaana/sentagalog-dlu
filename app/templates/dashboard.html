@@ -1,0 +1,86 @@
+{% extends "layouts/topbar.html" %} 
+
+{% block topbar %}
+    {% include "sections/topbar.html" %}
+{% endblock %}
+
+
+{% block main_content %}
+    <div class="dashboard-content">
+        <H4>The AI-Powered Automated Sentiment Analysis Tool Project</H4>
+        
+        This project is an ongoing research (Senior Thesis) by Ian Raymund Manaog, 
+        Kevin Kyle Hendrick Baldo and Levi John Sta. Ana. It aims to build an automated 
+        tool for detecting sentiment in Filipino-English Tweets 
+        using machine learning algorithms such 
+        as Artificial Neural Network, Support Vector Machines and Naive Bayes Classifiers.
+        <br /><br /> 
+
+        <h3>Official Labeling Protocol & Guidelines for Volunteers</h3> 
+        
+
+        <h6>The 10 Commandments for Labelling</h6>
+        <p>
+            For the consistency and uniformity of the procedures used in labelling the dataset, 
+            the following rules must be applied when labelling a tweet:
+
+            <ol>
+                <li><b>Rule 1 (Perspectivity)</b>: Tweets must be labelled based on 
+                       the sentiment expressed by the user and not of the labeller. 
+                       The question that is asked is, "How does the author of the tweet 
+                       seem to feel based on the content of his post?" </li>
+                <li><b>Rule 2 (Neutrality on Unclarity)</b>: Unclear posts such as ones
+                       that express incomplete ideas or fragmented thoughts must be labelled 
+                       neutral. </li>
+                <li><b>Rule 3 (Subject Dependency)</b>: 
+                       Without the involvement of a third party subject or object such as a idea, 
+                       ideology, company, 
+                       product or service, the subject of the post is primarily the author and his 
+                       expressions. However, 
+                       if the author is creating content in association to an idea, ideology, company, 
+                       product or service that does not necessarily involve his direct person or emotion,  
+                       the subject becomes the user's perception of the service and not necessarily 
+                       his emotions.</li>
+                <li><b>Rule 4 (Negativity on Humorous Dissatisfaction with Service)</b>: 
+                        If a post contains a review of a product or service but with a remark 
+                        of humor or satire that is <b>against</b> the targeted product, 
+                        the label must still be negative.</li>
+                <li><b>Rule 5 (Negativity on Sarcasm)</b>: 
+                        If a post contains a sarcastic remark even with a positive undertone, 
+                        it is deemed negative as per Rule #3 wherein the user associates the content 
+                        to another subject through his perspective.</li>
+                <li><b>Rule 6 (Neutrality on Fragmented Post Due to Links, Images, Videos, etc.)</b>: 
+                        If a post contains content beyond text that are not the scope of this 
+                        research, it must be labelled neutral UNLESS it is otherwise obvious in the 
+                        caption that the user is happy (positive remarks).
+                        However, if it is not obviously stated by the user, the tweet is labelled neutral.</li>
+                <li><b>Rule 7 (Neutrality on Promotional Material and Posts)</b>: 
+                        If a post contains content such advertisements, news, announcements and responses from 
+                        service providers or sellers, the post must be labelled neutral if it is under a professional
+                        tone that imitates the form of script-like responses from company.
+                        If it is however on a casual tone, it can be labelled positive or negative accordingly.</li>
+                <li><b>Rule 8 (Discarding of Non-Filipino English Tweets)</b>: 
+                        Any tweet written partially or entirely in foreign language or a specific Filipino dialect must 
+                        be discarded to reduce the noise in the data and to limit the scope of the dataset.</li>
+                <li><b>Rule 9 (Discarding Tweets without Substantial Content)</b>: 
+                        Any tweet that has only link, usernames, hashtags without any clear expression of reaction from 
+                        the author should be marked for discarding.</li>
+                <li><b>FINAL RULE . Rule 10 (The Use of Emojis to Identify Emotion)</b>: 
+                        Emojis can be used to identify the emotions presented in the tweet but they must be regarded 
+                        carefully, some tweets have a lot of positive emojis but with a negative undertone. In this case
+                        emojis are just a secondary source to the actual meaning of the text and must be looked upon together 
+                        with the whole tweet and not just as a part.
+                </li>
+            </ol>
+        </p>
+    </div> 
+    <style>
+        .dashboard-content {
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .dashboard-content h3 {
+            font-size: 22px;
+        }
+    </style>
+{% endblock %}
