@@ -25,6 +25,7 @@
                     <button :class="{'active': is_neutral}" @click="set_sent('neutral')">Author feels NEUTRAL</button>
                     <button :class="{'active': is_negative}" @click="set_sent('negative')">Author feels NEGATIVE</button>
                     <button :class="{'active': is_discard}" @click="set_sent('discard')">DISCARD this tweet</button>
+                    <button :class="{'active': is_sarcasm}" @click="set_sent('sarcasm')">Tweet involves SARCASM</button>
             </div>
             <input :disabled="disable_reason_txtfield" type="text" placeholder="Reason" v-model="reason_for_sentiment">
             <select @change="set_reason" v-model="buff_reason" default="others">
@@ -85,6 +86,7 @@
                 is_negative : false, 
                 is_neutral  : true,
                 is_discard : false,
+                is_sarcasm : false,
                 disable_reason_txtfield : false,
                 reason_for_sentiment : "",
                 sentiment : null,
@@ -109,6 +111,7 @@
                     self.is_negative = false 
                     self.is_neutral = false  
                     self.is_discard = false
+                    self.is_sarcasm = false
                     self.sentiment = null
                 },
                 set_sent(sent) {
@@ -125,6 +128,8 @@
                         return 0
                     } else if (sent == "negative") {
                         return -1
+                    } else if (sent == "sarcasm") {
+                        return 2
                     } else {
                         return -2
                     }

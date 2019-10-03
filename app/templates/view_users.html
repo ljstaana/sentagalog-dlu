@@ -21,7 +21,9 @@
                     <td>{{user.username}}</td>
                     <td>{{user.role}}</td>
                     <td>{{user.nlabels}}</td>
-                    <td><button @click="remove_user(user.id)">Remove User</button></td>
+                    {% if session["role"] == 1: %}
+                        <td><button @click="remove_user(user.id)">Remove User</button></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
             </table>

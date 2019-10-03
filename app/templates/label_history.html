@@ -35,8 +35,12 @@
                         <td>Neutral</td>
                     {% elif label.sentiment == 1: %}
                         <td>Positive</td>
-                    {% else: %}
-                        <td>Neutral</td>
+                    {% elif label.sentiment == -1: %}
+                        <td>Negative</td>
+                    {% elif label.sentiment == 2: %}
+                        <td>Sarcasm</td>
+                    {% elif label.sentiment == -2: %}
+                        <td>Discard</td>
                     {% endif %}
                 </tr>
                 <tr>

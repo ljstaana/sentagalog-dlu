@@ -64,11 +64,12 @@
                             datasets : [{
                                 data: [self.label_status.meta.unlabelled, 
                                        self.label_status.meta.labelled - self.label_status.meta.discards, 
-                                       self.label_status.meta.discards],
+                                       self.label_status.meta.discards,
+                                       self.label_status.meta.sarcasms],
                                 backgroundColor: [
                                     'black',
                                     'grey',
-
+                                    'orange',
                                     'red'
                                 ],
                                 borderWidth: 1
@@ -76,8 +77,9 @@
                             labels : [
                                 "Unlabelled (" + self.label_status.meta.unlabelled+ ")",
                                 "Labelled (" + self.label_status.meta.labelled + ")", 
-                                "Discards (" + self.label_status.meta.discards + ")"],
-                        
+                                "Discards (" + self.label_status.meta.discards + ")",
+                                "Sarcasms (" + self.label_status.meta.sarcasms + ")"],
+
                         }
                     })
                 },

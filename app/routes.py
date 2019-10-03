@@ -311,7 +311,9 @@ def api_label_status():
         labelled_tweets = db.session.query(Tweet).filter(getattr(Tweet, "sentiment").isnot(None)).count() 
         unlabelled_tweets = total_tweets - labelled_tweets
         discard_tweets = db.session.query(Tweet).filter(getattr(Tweet, "sentiment").is_(-2)).count()
-        
+        sarcasm_tweets = db.session.query(Tweet).filter(getattr(Tweet, "sentiment").is_(2)).count()
+
+
         # breakdown of sentiment labels
         positive_tweets = db.session.query(Tweet).filter_by(sentiment=1).count() 
         negative_tweets = db.session.query(Tweet).filter_by(sentiment=-1).count() 
@@ -370,7 +372,8 @@ def api_label_status():
                 "unlabelled" : unlabelled_tweets, 
                 "labelled" :   labelled_tweets, 
                 "total" :      total_tweets, 
-                "discards" : discard_tweets
+                "discards" : discard_tweets, 
+                "sarcasms" : sarcasm_tweets
             },
             "label_counts" : label_counts
         }

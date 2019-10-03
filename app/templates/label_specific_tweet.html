@@ -21,11 +21,12 @@
         </div>
         <div class="label-tools">
             <div class="sentiments">
-                    <button :class="{'active': is_positive}" @click="set_sent('positive')">Author feels POSITIVE</button>
-                    <button :class="{'active': is_neutral}" @click="set_sent('neutral')">Author feels NEUTRAL</button>
-                    <button :class="{'active': is_negative}" @click="set_sent('negative')">Author feels NEGATIVE</button>
-                    <button :class="{'active': is_discard}" @click="set_sent('discard')">DISCARD this tweet</button>
-            </div>
+                <button :class="{'active': is_positive}" @click="set_sent('positive')">Author feels POSITIVE</button>
+                <button :class="{'active': is_neutral}" @click="set_sent('neutral')">Author feels NEUTRAL</button>
+                <button :class="{'active': is_negative}" @click="set_sent('negative')">Author feels NEGATIVE</button>
+                <button :class="{'active': is_discard}" @click="set_sent('discard')">DISCARD this tweet</button>
+                <button :class="{'active': is_sarcasm}" @click="set_sent('sarcasm')">Tweet involves SARCASM</button>
+             </div>
             <input :disabled="disable_reason_txtfield" type="text" placeholder="Reason" v-model="reason_for_sentiment">
             <select @change="set_reason" v-model="buff_reason" default="others">
                 <option>
