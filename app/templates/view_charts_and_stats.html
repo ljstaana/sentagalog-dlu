@@ -37,13 +37,21 @@
         <canvas id="labels_by_user" width="300" height="300"></canvas>
     </div>
     <style>
-        .dashboard-content {
-            padding: 10px;
-            margin-top: 20px;
-        }
-        .dashboard-content h3 {
-            font-size: 22px;
-        }
+        @media screen and (max-width: 720px) {
+            .dashboard-content {
+                padding: 10px;
+                margin-top: 20px;
+            }
+            .dashboard-content h3 {
+                font-size: 22px;
+            }
+        } 
+        @media screen and (min-width: 720px) {
+            .dashboard-content {
+                width: 500px;
+                margin: 0 auto;
+            }
+        } 
     </style>
     <script> 
         new Vue({

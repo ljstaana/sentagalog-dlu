@@ -10,7 +10,10 @@
         <h3 style="margin: 0; padding: 0">Label Random Tweet</h3> 
         <small>Please remember that your goal is to identify how the <b>author</b>
         of this tweet feels and not how you feel. Assume that you are like 
-        a psychologist who identifies emotion from people.</small>
+        a psychologist who identifies emotion from people. If you're on a computer, you 
+        can use the vertical column of numpad keys *, 9, 6, 3 and . to select a sentiment and then 
+        press numpad enter to submit it. This might make accessibility easier.
+        </small>
         <hr /> 
         <div class="tweet">
                 &nbsp;&nbsp;<big><a>@[[ tweet[1] ]]</a></big>
@@ -27,15 +30,18 @@
                     <button :class="{'active': is_discard}" @click="set_sent('discard')">DISCARD this tweet</button>
                     <button :class="{'active': is_sarcasm}" @click="set_sent('sarcasm')">Tweet involves SARCASM</button>
             </div>
-            <input :disabled="disable_reason_txtfield" type="text" placeholder="Reason" v-model="reason_for_sentiment">
-            <select @change="set_reason" v-model="buff_reason" default="others">
+            <input :disabled="disable_reason_txtfield" pattern="[a-zA-Z]+" type="text" placeholder="Reason" v-model="reason_for_sentiment">
+            <select @change="set_reason"  v-model="buff_reason" default="others">
                 <option>
                 </option>
                 <option  v-for="reason in reasons">
                     [[reason]]
                 </option>
             </select>
+            <br />
+            <br />
             <button class="button-primary" @click="submit_sent()">Submit</button>
+            <br />
             <div class="notifier" v-if="notifier">
                 Successfully submitted your label. 
             </div>
@@ -46,23 +52,38 @@
         </div>
     </div>
     <style>
-        .dashboard-content {
-            padding: 10px;
-            margin-top: 20px;
-        }
-        .dashboard-content h3 {
-            font-size: 22px;
-        }
+        @media screen and (max-width: 720px) {
+            .dashboard-content {
+                padding: 10px;
+                margin-top: 20px;
+            }
+            .dashboard-content h3 {
+                font-size: 22px;
+            }
 
-        .tweet-content {
-            box-shadow: 0px 0px 2px grey;
-            padding: 10px;
-            margin: 5px;
-        }
+            .tweet-content {
+                box-shadow: 0px 0px 2px grey;
+                padding: 10px;
+                margin: 5px;
+            }
 
-        .label-tools button, .label-tools input, .label-tools select {
-                width: 100%;
+            .label-tools button, .label-tools input, .label-tools select {
+                    width: 100%;
 
+            }
+
+         
+        } 
+
+        @media screen and (min-width: 720px) {
+            .dashboard-content {
+                width: 720px;
+                margin: 0 auto;
+            }
+
+            div.sentiments button {
+                display: block;
+            }
         }
 
         .active {
@@ -176,6 +197,37 @@
                 let self = this
                 this.notifier = false
                 self.get_random_tweet()
+
+                jQuery("body").keydown(function(e){
+                    const AST = 106
+                    const NINE = 105 
+                    const SIX = 102
+                    const THREE = 99
+                    const DEL = 110
+                    const UP = 38
+                    const DOWN = 40
+
+
+                    let code = e.keyCode
+                    if(code == AST || code == NINE || 
+                       code == SIX || code == THREE || 
+                       code == DEL) {
+                        self.reset_sent()
+                        if(code == AST) {
+                            self.set_sent("positive")
+                        } else if (code == NINE) {
+                            self.set_sent("neutral")
+                        } else if (code == SIX ) {
+                            self.set_sent("negative")
+                        } else if (code == THREE) {
+                            self.set_sent("discard")
+                        } else if (code == DEL) {
+                            self.set_sent("sarcasm")
+                        }
+
+                   
+                    }
+                })
             },
             delimiters : ["[[", "]]"]
         })

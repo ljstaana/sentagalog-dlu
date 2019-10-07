@@ -24,9 +24,11 @@ def login():
     if len(user) == 1:
         session["username"] = user[0].username
         session["role"] = user[0].role
-    return {
-        "user" : [username]
-    }
+        return {
+            "user" : [username]
+        }
+    else :
+        return {}
 
 # / - logout action 
 @app.route('/logout')
