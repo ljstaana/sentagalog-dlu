@@ -505,3 +505,14 @@ def number_stats():
         )
     else: 
         return "You are not allowed to access this resource"
+
+
+@app.route("/charts")
+def charts(): 
+    if 'username' in session: 
+        return render_template("charts.html", 
+            user = UserClass.get_user(session["username"]), 
+            session = session
+        )
+    else: 
+        return "You are not allowed to access this resource"
