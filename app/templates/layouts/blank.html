@@ -5,13 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>SenTagalog - Data Labelling Utility</title>
     
-        <!--==== STYLESHEETS ====--> 
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/skeleton.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
-        <!--==== SCRIPTS ==== --> 
-        <script src="{{ url_for('static', filename='js/vue.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+        {% include "layouts/partials/header_embeds.html" %}
 
     </head>
     <body>

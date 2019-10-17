@@ -1,0 +1,137 @@
+{% extends "layouts/topbar.html" %} 
+
+{% block topbar %}
+    {% include "sections/topbar.html" %}
+{% endblock %}
+
+
+{% block main_content %}
+    <div class="dashboard-content label_tweets" id="label_tweets" style="z-index: 1">
+
+        <h3>Statistics</h3> 
+        <br />
+        <h5>Label Status</h5>
+        
+        <table class="table">
+            <tr>
+                <td>Volunteer 1</td>
+                <td>{{label_counts[1]}} tweets</td>
+            </tr>
+            <tr>
+                <td>Volunteer 2</td>
+                <td>{{label_counts[2]}} tweets</td>
+            </tr>
+        </table>
+        <br />
+        <h3>Kappa Score</h3>
+        <h5>{{kappa}} at {{kappa_count}} tweets</h5> 
+        <br />
+        <h5>Confusion Matrix</h5>
+        <table class="table">
+             <tr>   
+                 <td></td>
+                 {% for row in names: %}
+                    <td>{{row}}</td>
+                 {% endfor %}
+             </tr>
+             {% for row in cm %}
+             <tr>
+                 <td>{{names[loop.index-1]}}</td>
+                 {% for cell in row %}
+                    <td>{{cell}}</td> 
+                 {% endfor %}
+             </tr>
+             {% endfor %}
+        </table>
+
+        <br />
+        <h5>Tweets (by Topic)</h5>
+        View the entire report at this <a href="/dataset_report.html" target="_blank">page</a>
+        <ul>
+            <li v-for="topic,index in topics">[[index]]
+                <ul>
+                    <li v-for="subset,subset_idx in topic">[[subset_idx]]
+                        <ul style="column-count:3"> 
+                            <li v-for="term,term_idx in subset">[[term]]</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div> 
+  
+    <style scoped>
+
+            .dashboard-content {
+                padding: 10px;
+                margin-top: 20px;
+            }
+
+            .dashboard-content h3 {
+                font-size: 22px;
+            }
+
+       
+          
+    </style>
+
+    <script>
+        let vm = new Vue({
+            el: "#label_tweets", 
+            data: {
+                labels : null, 
+                reasons: null,
+                sentiments : null,
+                page: null,
+                label_count: null, 
+                topics: { "Domain Specific": { "websites and apps": [ "lazada", "shopee", "paymaya", "amazon", "youtube", "wordpress", "itunes", "google", "yahoo", "reddit", "instagram", "twitter", "facebook" ], "companies and services": [ "abscbn", "gmanetwork", "converge", "pldt", "cnn", "bbc", "avon", "coca cola", "inquirer", "rappler", "uber", "netflix", "grab" ], "mainstream shows": [ "ang probinsyano", "the killer bride", "the generals daughter", "24 oras", "eat bulaga", "its showtime", "kmjs", "mmk" ], "video games": [ "mobile legends", "pubg", "dota", "fortnite", "gta v", "overwatch", "team fortress", "cyberpunk", "assasins creed", "minecraft", "csgo" ], "current events": [ "duterte", "sogie", "greta thunberg", "edsa", "panelo", "lacson", "bong go", "hazing", "jose mari chan", "christmas", "october", "pepsi", "robredo", "african swine fever", "milktea", "freelomi" ] }, "English Words": { "transportation": [ "jeepney", "bus", "tricycle", "mrt", "lrt", "taxi", "tnvs", "car", "airplane", "boat", "ship", "van" ], "common places": [ "airport", "campus", "mall", "mart", "church", "museum", "house", "office", "bank", "park", "restaurant", "shop", "store", "cr", "restroom", "comfort room", "toilet", "market" ], "events": [ "concert", "festival", "intrams", "tournament", "party", "outing", "excursion", "meeting", "ceremony", "reunion", "seminar", "conferences" ], "family members": [ "mother", "mommy", "mama", "mom", "father", "papa", "dad", "sister", "brother", "bro", "grandpa", "grandfather", "grandma", "grandmother", "uncle", "aunt", "son", "daughter" ], "relationships": [ "friend", "enemy", "boyfriend", "girlfriend", "wife", "husband", "employee", "boss", "child", "parent", "student", "teacher", "member", "leader", "customer", "seller", "listener", "speaker", "client", "server" ], "sports and leisure": [ "basketball", "volleyball", "boxing", "badminton", "soccer", "football", "dancing", "singing", "chess", "billiards", "poker", "swimming" ], "parts of the house": [ "kitchen", "bedroom", "bathroom", "dining room", "roof", "ceiling", "living room", "guestroom", "garage" ], "food and drinks": [ "fruits", "spaghetti", "burger", "vegetables", "noodles", "pasta", "candy", "rice", "soup", "fried chicken", "wine", "beer", "juice", "tea", "coffee", "shake", "water", "milktea", "champagne", "latte" ], "life events": [ "birthday", "wedding", "graduation", "baptism", "funeral", "debut" ], "professions": [ "doctor", "professor", "police", "politician", "nurse", "accountant", "lawyer", "scientist", "actor", "actress", "artist", "singer", "dancer", "gamer", "researcher", "engineer", "writer", "journalist" ], "disciplines": [ "science", "religion", "politics", "technology", "philosophy", "economics", "literature", "sports", "entertainment", "finance", "environments" ], "weather": [ "rainy", "sunny", "cloudy", "stormy", "typhoon", "tornado", "tsunami", "earthquake", "landslide", "flood" ], "general issues": [ "gender", "god", "rights", "inequality", "oppression", "depression", "welfare" ], "taste": [ "sweet", "salty", "spicy", "sour", "delicious", "bland", "bitter" ] }, "Tagalog Words": { "transportation": [ "dyip", "traysikel", "padyak", "bangka", "barko", "kotse", "eroplano", "motor", "motorsiklo" ], "places": [ "eskwelahan", "bilihan", "simbahan", "bahay", "sakayan", "tindahan", "opisina", "bangko", "bilihan", "kubeta", "kainan", "banyo" ], "events": [ "fiesta", "pyesta", "piyesta", "birthdey", "miting" ], "family members": [ "nanay", "ina", "inay", "tatay", "itay", "lolo", "lola", "ate", "kuya", "bunso", "pinsan", "tito", "tita", "pamangkin", "ninong", "ninang" ], "relationships": [ "kaibigan", "kaaway", "nobyo", "syota", "asawa", "amo", "anak", "magulang", "estudyante", "guro", "titser", "miyembro", "lider", "kliyente" ], "hobbies": [ "kanta", "awit", "sayaw", "langoy" ], "parts of the house": [ "kusina", "kwarto", "kainan", "bubong", "sahig", "kisame", "pader", "sala" ], "food": [ "pansit", "manok", "karne", "isda", "kanin", "bigas", "ulam", "gulay", "prutas", "alak", "gin", "kape", "tubig", "tsaa" ], "life events": [ "kasal", "binyag", "libing" ], "professions": [ "doktor", "propesor", "pulis", "pulitiko", "nars", "pulitiko", "nars", "abogado", "aktor", "aktres", "artista" ], "disciplines": [ "relihiyon", "siyensya", "pulitika", "teknolohiya", "ekonomiya", "pilosopiya", "literatura", "isports", "pera", "kalikasan", "kapaligiran" ], "weather": [ "maulan", "mainit", "bagyo", "buhawi", "lindol", "baha", "maulap" ], "general issues": [ "kasarian", "diyos", "karapatan", "opresyon", "depresyon", "maalat", "maasim", "matamis", "maanghang", "matabang", "mapait", "masarap" ] } }
+            },
+            methods: {
+                get_sentiment(code) {
+                    return this.sentiments[code]
+                },
+                get_reason(code) {
+                    return this.reasons[code]
+                },
+                get_labels(url) {
+                    let self = this 
+                    axios.get(url) 
+                         .then(res => {
+                            self.labels = res.data.labels 
+                            self.reasons = res.data.reasons 
+                            self.sentiments = res.data.sentiments
+                            self.label_count = res.data.label_count 
+                            self.page = res.data.page 
+                            console.log(res.data)
+                            document.scrollTop = 0
+                         })
+                         .catch(err => {
+                            alert("There was an error retrieving tweets from the server.")
+                         })
+                },
+                search(){
+                    this.get_labels("/my_labels/get_labels?page=1")
+                },
+                next() {
+                    console.log("dsfsd")
+                    this.get_labels("/my_labels/get_labels?page=" + (this.page + 1))
+                },
+                prev() {
+                    if(this.page <= 1)
+                        return; 
+
+                    console.log("dsfsd")
+                    this.get_labels("/my_labels/get_labels?page=" + (parseInt(this.page) - 1))
+                },
+                go() {
+                    this.get_labels("/my_labels/get_labels?page=" + this.page)
+                },
+                
+            },
+            mounted() {
+            
+            },
+            delimiters : ["[[", "]]"]
+        })
+    </script>
+{% endblock %}

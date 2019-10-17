@@ -1,0 +1,116 @@
+{% extends "layouts/topbar.html" %} 
+
+{% block topbar %}
+    {% include "sections/topbar.html" %}
+{% endblock %}
+
+
+{% block main_content %}
+    <div class="dashboard-content profile">
+
+        <h4>Profile Preview</h4>
+        Hello, {{user.first_name}}! This is page is dedicated for you to set up 
+        how you would want to be acknowledged (if you want) or to be cited for your 
+        contributions in the research project. As you have contributed an important 
+        role in the project, we are very willing to acknowledge your help. You can view 
+        your profile in the users page.
+
+        <br /><br />
+        <div class="profile-banner card">
+            <div class="avatar-section">
+                <div class="avatar avatar-xl">
+                    <img src="{{user.avatar}}"    alt="...">
+                </div>
+                <br /><br />
+                <h3>
+                    {{user.first_name}}
+                    {{user.last_name}}
+                </h3>
+                <span class="username">
+                   @{{user.username}}
+                </span>
+                <span class="role">
+                    {% if user["role"] == 1 %} 
+                        Admin
+                    {% endif %}
+                    {% if user["role"] == 2 %}
+                        Volunteer
+                    {% endif %}
+                </span>
+             
+            </div>
+            <div class="details-section">
+              
+                <br />
+                <b>About Me</b>
+                <br />
+                {{user.bio}}
+                <br /><br />
+                {% if user.role == 2 %}
+                    <b>Contribution Summary</b>
+                    <p>
+                        {{user.first_name}} has manually labelled {{user.last_labelled_id}} tweets
+                        as a volunteer in this research project. 
+                    </p>
+                {% endif %}
+
+                {% if user.role == 1 %}
+                <b>Contribution Summary</b>
+                    <p>
+                        {{user.first_name}} is a member of the main researchers of this 
+                        research project and is one of the administrators of this app.
+                    </P>
+                {% endif %}
+            </div>
+            <button class="btn btn-primary" onclick="location='edit_profile'">Edit Profile</button>
+        </div>
+
+
+        <style scoped>
+
+            .dashboard-content {
+                padding: 10px;
+                margin-top: 20px;
+            }
+
+            .dashboard-content h3 {
+                font-size: 22px;
+            }
+
+            .profile .username {
+                text-align: center;
+                font-size: 20px;
+                font-weight: bold;
+                margin-top: 0px;
+            }
+
+            .profile .role {
+                display: block;
+                margin-top: -15px;
+            }
+
+            .profile-banner {
+                display: flex;
+                padding: 20px;
+            }
+
+            .avatar-section {
+                flex: 10%;
+                text-align: center;
+            }
+
+            .avatar-section .avatar * {
+                position: static;
+                z-index: 1;
+            }
+
+            .details-section {
+                flex: 80%;
+            }
+    
+ 
+        </style>
+          
+    </div> 
+  
+{% endblock %}

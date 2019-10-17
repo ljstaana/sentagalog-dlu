@@ -6,80 +6,174 @@
 
 
 {% block main_content %}
-    <div class="dashboard-content" id="app">
-        <h2>My Labels</h2> 
-        Showing {{(page) * limit}} - {{(page) * limit + 1}} of {{total}} labels
-        <hr />
-        {% for label in label_logs: %}
+    <div class="dashboard-content label_tweets" id="label_tweets" style="z-index: 1">
+
+        <h4>My Labels</h4> 
+        
+        Page [[page]] of [[Math.ceil(label_count/5)]]
+        <br /><br />
+        <div v-for="label in labels" class="card" style="margin: 5px;">
+            <a>@[[label.tweet.author]]</a>
+            [[label.tweet.text]] 
+            <br /><br />
             <table>
                 <tr>
-                    <td colspan="2">
-                        {{label.tweet_text}}
-                    </td>
+                    <td><b>Labelled At</b></td>
+                    <td>[[label.updated_at]]</td>
                 </tr>
                 <tr>
-                    <td>Timestamp</td>
-                    <td>{{label.created_date}}</td>
+                    <td><b>Your Label</b></td>
+                    <td>[[get_sentiment(label.sentiment)]]</td>
                 </tr>
                 <tr>
-                    <td>Username</td>
-                    <td>{{label.username}}</td>
+                    <td><b>Reason for Label</b></td>
+                    <td>[[get_reason(label.reason_for_sentiment)]]</td>
                 </tr>
                 <tr>
-                    <td>Tweet ID</td>
-                    <td>{{label.tweet_id}}</td>
-                </tr>
-                <tr>
-                    <td>Sentiment</td>
-                    {% if label.sentiment == 0: %}
-                        <td>Neutral</td>
-                    {% elif label.sentiment == 1: %}
-                        <td>Positive</td>
-                    {% elif label.sentiment == -1: %}
-                        <td>Negative</td>
-                    {% elif label.sentiment == 2: %}
-                        <td>Sarcasm</td>
-                    {% elif label.sentiment == -2: %}
-                        <td>Discard</td>
-                    {% endif %}
-                </tr>
-                <tr>
-                    <td>Reason</td>
-                    <td>{{label.reason_for_sentiment}}</td>
-                </tr>
-                <tr>
-                    <td>Actions</td>
+                    <td><b>Actions</b></td>
                     <td>
-                        <a href="/label_specific_tweet?tweet_id={{label.tweet_id}}">
-                            <button>Relabel Tweet?</button>
+                        <a target="_blank":href='"/edit_label?id="+label.instance_id'>
+                            <button class="btn btn-primary" >Edit Label</button>
                         </a>
                     </td>
                 </tr>
             </table>
-        {% endfor %}
-        <hr />
-        <a href="/my_labels?page={{page-1}}"><button>Previous</button></a>
-        <a href="/my_labels?page={{page+1}}"><button>Next</button></a>
-    </div>
-    <style>
-        .dashboard-content {
-            padding: 10px;
-            margin-top: 20px;
-        }
-        .dashboard-content h3 {
-            font-size: 22px;
-        }
+        </div>
 
-        @media screen and (min-width: 720px) {
+        <div class="controls" align="center" style="width:300px;margin: 0 auto;" >
+            <table>
+                <tr>
+                    <td> 
+                        <button class="btn" @click='prev'>
+                            <i class="icon icon-back"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <input type="number" class="form-input" v-model="page" style="width: 100px; margin-top: 5px;">
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" @click="go"> 
+                            <i class="icon icon-search"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn"  @click='next'>
+                            <i class="icon icon-forward" ></i>
+                        </button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+    </div> 
+  
+    <style scoped>
+
             .dashboard-content {
-                width: 720px;
-                margin: 0 auto;
+                padding: 10px;
+                margin-top: 20px;
             }
-        }
-    </style>
-    <script> 
-        new Vue({
-            el: "#app"
+
+            .dashboard-content h3 {
+                font-size: 22px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            a:hover {
+                text-decoration: none;
+            }
+
+            .searchbox {
+                margin: 10px;
+                width: 80%;
+                margin: 10px auto;
+            }
+
+            .controls * {
+                display: inline-block;
+            }
+
+            #label_tweets button {
+                margin: 5px;
+            }
+
+            .controls * {
+                display: inline-block;
+            }
+          
+        </style>
+
+    <script>
+        let vm = new Vue({
+            el: "#label_tweets", 
+            data: {
+                labels : null, 
+                reasons: null,
+                sentiments : null,
+                page: null,
+                label_count: null
+            },
+            methods: {
+                get_sentiment(code) {
+                    return this.sentiments[code]
+                },
+                get_reason(code) {
+                    return this.reasons[code]
+                },
+                get_labels(url) {
+                    let self = this 
+                    axios.get(url) 
+                         .then(res => {
+                            self.labels = res.data.labels 
+                            self.reasons = res.data.reasons 
+                            self.sentiments = res.data.sentiments
+                            self.label_count = res.data.label_count 
+                            self.page = res.data.page 
+                            console.log(res.data)
+                            document.scrollTop = 0
+                         })
+                         .catch(err => {
+                            alert("There was an error retrieving tweets from the server.")
+                         })
+                },
+                search(){
+                    this.get_labels("/my_labels/get_labels?page=1")
+                },
+                next() {
+                    console.log("dsfsd")
+                    this.get_labels("/my_labels/get_labels?page=" + (this.page + 1))
+                },
+                prev() {
+                    if(this.page <= 1)
+                        return; 
+
+                    console.log("dsfsd")
+                    this.get_labels("/my_labels/get_labels?page=" + (parseInt(this.page) - 1))
+                },
+                go() {
+                    this.get_labels("/my_labels/get_labels?page=" + this.page)
+                },
+                
+            },
+            mounted() {
+                let self = this 
+                axios.get("my_labels/get_labels") 
+                     .then(res => {
+                        self.labels = res.data.labels 
+                        self.reasons = res.data.reasons 
+                        self.sentiments = res.data.sentiments
+                        self.label_count = res.data.label_count 
+                        self.page = res.data.page
+                        console.log(res.data)
+                     })
+                     .catch(err => {
+                        alert("There was an error retrieving tweets from the server.")
+                     })
+            },
+            delimiters : ["[[", "]]"]
         })
     </script>
 {% endblock %}

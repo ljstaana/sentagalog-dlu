@@ -1,127 +1,268 @@
-<div class="topbar">
-    <div class="topbar-container" id="topbar">
-        <div class="title">
-            <h1 class="topbar-text" @click="window.location='/dashboard'">SDL Utility Tool</h1>
-        </div> 
-        <div class="spacer" align="right">
-            <span class="username" style="color: yellow;">
-                @{{username}}
-            </span> 
-        </div>
-        <div class="menu-icon">
-            <div class="icon" @click="toggle_menu">
-                <img width="50" src="{{url_for('static', filename='images/burger.jpg')}}">
+<div class="topbar" style="z-index:999"></div>
+    <div class="topbar-container p-fixed" id="topbar">
+        <div>
+            <div class="logo">
+                <span @click="location='/'" class="title-text">SDLU</span> 
+            </div>
+            <div class="aside">
+                <tr>
+                    <td>
+                        <span class="username">
+                            {{user.first_name}} <sup id="label_count">{{user["last_labelled_id"]}}</sup>
+                            &nbsp;
+                            <div class="avatar avatar-sm" >
+                                <img src="{{user['avatar']}}" alt="...">
+                            </div>
+                        </span>
+                    </td>
+                    <td class="menu-iconx">
+                        <span class="menu-icon">
+                            <img @click="toggle_menu" width="40px" src="{{url_for('static', filename='images/burger.jpg')}}">
+                        </span>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <br />
+                        <div class="menu-container">
+                            <div class="arrow_up"></div>
+                            <ul class="menu">
+
+                                <!--USERS MODULE-->
+                                <li class="divider" data-content="TEAM & YOU">
+                                </li>
+                                <li class="menu-item" @click="location='profile'">
+                                    <a href="#">
+                                    <i class="icon icon-people"></i> Profile
+                                    </a>
+                                </li>
+                                <li class="menu-item" @click="location='users'">
+                                    <a href="#">
+                                    <i class="icon icon-apps"></i> Users
+                                    </a>
+                                </li>
+
+                                <!--DATASET-->
+                                <li class="divider" data-content="DATASET">
+                                </li>
+                                <li class="menu-item" @click="location='view_tweets'">
+                                    <a href="#">
+                                    <i class="icon icon-search"></i> View Tweets
+                                    </a>
+                                </li>
+                                <li class="menu-item" @click="location='label_tweets'">
+                                    <a href="#">
+                                    <i class="icon icon-edit"></i> Label Tweets
+                                    </a>
+                                </li>
+                                <li class="menu-item" @click="location='my_labels'">
+                                    <a href="#">
+                                    <i class="icon icon-copy"></i> My Labels 
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="#">
+                                    <i class="icon icon-download"></i> Download Dataset
+                                    </a>
+                                </li>
+
+                                <!--NUMBERS AND FIGURES-->
+                                <li class="divider" data-content="NUMBERS AND FIGURES">
+                                </li>
+                                <li class="menu-item" @click="location='number_stats'">
+                                    <a href="#">
+                                    <i class="icon icon-plus"></i>
+                                    <i class="icon icon-minus"></i> Stats
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="#">
+                                    <i class="icon icon-share"></i> Charts
+                                    </a>
+                                </li>
+
+                                <!--ACCOUNT-->
+                                <li class="divider" data-content="ACCOUNT">
+                                <li class="menu-item" @click="location='logout'">
+                                    <a href="#">
+                                    <i class="icon icon-back"></i> Log Out
+                                    </a>
+                                </li>
+                                        
+                            </ul>
+                                        
+                            <!-- <ul>
+                                <li><a href="view_users">View Users</a></li>
+                                <li><a href="view_dataset">View Dataset</a></li>
+                                <li><a href="view_charts_stats">View Charts & Stats</a></li>
+                                <li><a href="label_random_tweet">Label Random Tweet</a></li>
+                                <li><a href="label_specific_tweet">Label Specific Tweet</a></li>
+                                <li><a href="my_labels">My Labels</a></li>
+                                <li><a href="label_history">Label History</a></li>
+                                {% if session["role"] == 1: %}
+                                    <li><a href="create_user">Create User</a></li>
+                                    <li><a href="download_csv">Download CSV</a></li>
+                                {% endif %}
+                                <li><a href="logout">Logout</a></li>
+                            </ul> -->
+                        </div>
+                    </td>
+                </tr>
             </div>
         </div>
     </div>
-    <div class="menu">
-        <ul>
-            <li><a href="view_users">View Users</a></li>
-            <li><a href="view_dataset">View Dataset</a></li>
-            <li><a href="view_charts_stats">View Charts & Stats</a></li>
-            <li><a href="label_random_tweet">Label Random Tweet</a></li>
-            <li><a href="label_specific_tweet">Label Specific Tweet</a></li>
-            <li><a href="my_labels">My Labels</a></li>
-            <li><a href="label_history">Label History</a></li>
-            {% if session["role"] == 1: %}
-                <li><a href="create_user">Create User</a></li>
-                <li><a href="download_csv">Download CSV</a></li>
-            {% endif %}
-            <li><a href="logout">Logout</a></li>
-        </ul>
-    </div>
-</div>
-<style scope>
-
-   
-
-    .menu {
-        color: white;
-        background-color: rgb(29, 122, 169);
-    }
-
-    .menu li {
-        list-style: none;
-        padding: 5px 10px;
-    }
-
-    .menu li a {
-        color: white;
-        text-decoration: none;
-    }
-
-    .menu li a:hover {
-        color: goldenrod;
-        text-decoration: none;
-    }
-
-    .menu li a:active {
-        color: yellow;
-        outline: none;
-    }
+    
+<style scoped>
 
 
-    .menu ul {
-        padding: 10px;
-    }
 
-    .topbar-container {
-        display: flex;
-        background-color: rgb(59, 152, 199);
-        color: white;
-        font-size: 90%;
-        height: 40px;
-    }
-
-    .title .topbar-text {
-        font-size: 25px;
-        margin-top: 5px;
-        margin-left: 5px;
-        flex: 60%;
-    }
-
-    .spacer {
-        flex: 20%;
-        padding-top: 8px;
-        color: white;
-        text-align: right;
-        padding-left: 50px;
-    }
-
-    .menu-icon {
-        flex: 5%;
-        text-align: right;
-        margin-top: -5px;
-    }
-
-    .menu-icon:active {
-        opacity: 0.5;
-    }
+        td {
+            vertical-align: top;
+        }
 
     
-    .username {
-        display: block;
-        margin-top: 0px;
-        margin-right: 10px;
-        text-align: right;
-    }
-
-    @media screen and (min-width: 720px) {
-        .username {
-            text-align: left;
+        div.topbar .menu * {
+            position: relative;
+            z-index: 999;
         }
-    }
-</style>
+    
+        div.topbar-container {
+            height: 40px;
+            background-color: #5755d9;
+            color: white;
+            width: 100%;
+            position: fixed;
+            z-index: 10;
+        }
+    
+        div.topbar-container > div {
+            display: flex;
+            height: 40px;
+        }
+    
+        div.logo {
+            flex: 20%;
+        }
+    
+        div.aside {
+            flex: 80%;
+            text-align: right;
+        }
+    
+        div.topbar-container .title-text {
+            font-size: 25px;
+            padding: 5px;
+        }
+        
+      
+    
+        .username {
+            display: inline-block;
+            width: 200px;
+            position: relative;
+            top: -15px;
+        }
+    
+    
+        .avatar {
+            opacity: 0.9;
+            margin: 0;
+            padding: 0;
+            margin-left: 10;
+            position: relative;
+        }
+        
+        .avatar:hover img {
+            opacity: 1.0;
+            position: relative;
+        }
+    
+        .topbar .avatar:hover {
+            transform: rotate(3deg);
+            cursor: selector;
+        }
+    
+        td.menu-iconx {
+            padding-left: 10px;
+        }
+    
+        .menu-icon {
+            opacity: 0.8;
+        }
+        .menu-icon img {
+            margin-right: -15px;
+        }
+    
+        .menu-icon:hover {
+            opacity: 1.0;
+            cursor: pointer;
+        }
+    
+        .menu-container {
+            top: -10px;
+            float: right;
+            width: 100%;
+            color: black;
+        }
+
+        
+        
+
+        .arrow-up {
+            width: 0; 
+            height: 0; 
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid black;
+            background-color: white;
+        }
+          
+        @media screen and (max-width: 720px) {
+            .menu {
+                position: fixed; 
+                top: 35px;
+                left: 0px;
+                width: 100%;
+                height: 100%;
+                text-align: left;
+                z-index: 100000;
+            }
+            .menu * {
+                position: relative;
+                z-index: 100000;
+            }
+        }
+    
+        @media screen and (min-width: 720px) {
+            div.topbar-container > div {
+                width: 800px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
+    
+            .menu-container {
+                width: 200px;
+            }
+
+            .menu {
+                position: relative;
+                z-index: -15px;
+                top: -10px;
+            }
+        }
+    
+    
+    </style>
+</div>
 <script>
     let topbar = new Vue({
         el: "#topbar", 
         data : {
-            show_menu : false
+            show_content: false
         },  
         methods: {
             toggle_menu () {
-                $(".menu").slideToggle()
+                this.show_content = !this.show_content
                 navigator.vibrate([100])
+                $(".menu").slideToggle()
+            
             }
         },
         mounted() {

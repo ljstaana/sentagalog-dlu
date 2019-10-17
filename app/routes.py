@@ -1,8 +1,27 @@
 from app import app
+import json
 from flask import Flask, session, render_template, url_for, request, redirect
+from app.classes import UserClass, ReasonClass, TweetClass, LabelClass
+from app.models import User, Tweet, Labels, Reason
+from app import db
+from sklearn.metrics import cohen_kappa_score
 
 ADMIN = 1
 VOLUNTEER = 2
+
+NEGATIVE = 0 
+NEUTRAL = 1 
+POSITIVE = 2 
+SARCASM = 3 
+DISCARD = 4
+
+sent_names = {
+    0 : "negative", 
+    1 : "neutral", 
+    2 : "positive", 
+    3 : "sarcasm", 
+    4 : "discard"
+}
 
 # / - splash screen
 @app.route('/')
@@ -36,475 +55,453 @@ def logout():
     session.pop("username", None)
     return redirect(url_for("splash"))
 
+# ------------ APPLICATION DASHBOARD ------------ #
+
 # /dashboard - app dashboard
 @app.route("/dashboard")
 def dashboard(): 
     if 'username' in session:
         return render_template('dashboard.html', 
-            username=session["username"],
+            user=UserClass.get_user(session["username"]),
             session=session)
     else: 
         return render_template('splash.html')
 
-# /view_dataset - view dataset 
-@app.route("/view_dataset")
-def view_dataset(): 
-    if 'username' in session:
-        return render_template('view_dataset.html', 
-            username=session["username"],
-            session=session)
-    else: 
-        return render_template('splash.html')
+# ----------------- USERS ------------------------# 
 
-# /view_tweets - view tweets 
-@app.route("/view_tweets", methods=["POST"])
-def view_tweets():
-    if 'username' in session:
-        from app.models import Tweet
-        from sqlalchemy import desc, asc
-        from app import db
-        data = request.json 
-        print(data)
-        results = {}
-        field = data["field"]
-        like = data["filter"]
-        ord_field = data["ord_field"]
-        ord_dir = data["ord_dir"]
-        limit = data["limit"]
-        offset = (int(data["offset"]) - 1) * limit
-
-        order = None 
-        if ord_dir == "DESC": 
-            order = desc(getattr(Tweet, ord_field))
-        else: 
-            order = asc(getattr(Tweet, ord_field))
-
-        header = Tweet.query 
-
-        if len(like) > 0:
-            header = header.filter(getattr(Tweet, field).like("%" + like + "%"))
-
-        results = header.order_by(order)\
-                             .limit(limit).offset(offset)\
-                             .all()
-
-        ntweets = None
-        if len(like) > 0:
-            ntweets = db.session.query(Tweet)\
-                        .filter(getattr(Tweet, field).like("%" + like + "%"))\
-                        .count()    
-        else: 
-            ntweets = db.session.query(Tweet)\
-                        .count()
-        
-        return {
-            "tweets" : [
-                [result.author, result.text, 
-                 result.created_at, result.language, 
-                 result.search_term, result.dataset_domain, 
-                 result.sentiment, result.labeller, 
-                 result.reason_for_sentiment, result.tweet_id] 
-                for result in results
-            ], 
-            "ntweets" : ntweets
-        }
-    else: 
-        return "You must be logged in to do that."
-
-# /view_charts_and_stats - view charts and other statistics
-@app.route("/view_charts_stats")
-def view_charts_and_stats(): 
+# USER PROFILE  
+# -----------------------------------------------
+# /profile - user profile 
+@app.route("/profile") 
+def profile(): 
     if 'username' in session: 
-        from app.models import Tweet
-        from app.models import User 
-        return render_template("view_charts_and_stats.html",
-                username=session["username"],
-                session=session
-        )
-    else: 
-        return render_template("splash.html")
-
-# /label_random_tweet - label a random tweet 
-@app.route("/label_random_tweet")
-def label_random_tweet(): 
-    if 'username' in session: 
-        from app.models import Tweet 
-        from app.models import User 
-        return render_template("label_random_tweet.html",
-            username=session["username"],
-            session=session
-        )
-    else: 
-        return render_template("splash.html")
-
-
-# /label_specific_tweet - label a specific tweet
-@app.route("/label_specific_tweet")
-def label_specific_tweet(): 
-    if 'username' in session: 
-        from app.models import Tweet 
-        from app.models import User 
-        tweet_id = request.args.get("tweet_id")
-        return render_template("label_specific_tweet.html",
-            username=session["username"],
-            tweet_id=tweet_id,
+        return render_template('profile.html', 
+            user=UserClass.get_user(session["username"]), 
             session=session) 
     else: 
-        return render_template("splash.html")
+        return render_template('splash.html')
 
-
-# /label_history - view the label history
-@app.route("/label_history")
-def view_label_history(): 
+# /edit_profile - page to edit user profile
+@app.route("/edit_profile")
+def edit_profile(): 
     if 'username' in session: 
-        from app.models import LabelHistory 
-        from app.models import Tweet 
-        from app.models import User
-        from app import db
-
-        username = session["username"]
-        user_id = User.query.filter_by(username=username).first().id
-        limit = request.args.get("limit", 10)
-        page = int(request.args.get("page", 1)) - 1
-        offset = page * limit 
-        order_by = request.args.get("order_by", "created_date") 
-        order_dir = request.args.get("order_dir", "desc")
-
-        order = None 
-        if order_dir == "desc":
-            order = getattr(LabelHistory, order_by).desc() 
-        else: 
-            order = getattr(LabelHistory, order_by).asc()
-        
-
-        label_logs = db.session.query(LabelHistory)\
-                        .order_by(order)\
-                        .limit(limit)\
-                        .offset(offset).all()
-        
-        total = db.session.query(LabelHistory).count()
-
-        for label in label_logs: 
-            label.username = User.query.filter_by(id=label.user_id).first().username
-            text = db.session.query(Tweet)\
-                    .filter_by(tweet_id=label.tweet_id)\
-                    .first().text 
-            label.text = text
-
-
-        for label in label_logs: 
-            label.username = username 
-            text = db.session.query(Tweet)\
-                     .filter_by(tweet_id=label.tweet_id)\
-                     .first().text 
-            label.tweet_text = text
-
-        return render_template("label_history.html", 
-            username=session["username"],
-            label_logs=label_logs, 
-            limit=limit, 
-            page=page, 
-            offset=offset, 
-            total=total,
+        return render_template('edit_profile.html', 
+            user=UserClass.get_user(session["username"]), 
             session=session)
     else: 
-        return render_template("splash.html")
+        return render_template('splash.html')
 
-# /my_labels -  lets the user view his or her labels 
-@app.route("/my_labels")
-def my_labels(): 
+# /edit_profile_next - updates profile information
+@app.route("/edit_profile_next", methods=["POST"])
+def edit_profile_next(): 
     if 'username' in session: 
-        from app.models import LabelHistory 
-        from app.models import Tweet 
-        from app.models import User
-        from app import db 
-        
-        username = session["username"]
-        user_id = User.query.filter_by(username=username).first().id
-        limit = request.args.get("limit", 10)
-        page = int(request.args.get("page", 1)) - 1 
-        offset = page * limit 
-        order_by = request.args.get("order_by", "created_date")
-        order_dir = request.args.get("order_dir", "desc") 
-
-        order = None 
-        if order_dir ==  "desc" : 
-            order = getattr(LabelHistory, order_by).desc() 
-        else: 
-            order = getattr(LabelHistory, order_by).desc() 
-
-        label_logs = db.session.query(LabelHistory)\
-                        .filter_by(user_id=user_id)\
-                        .order_by(order)\
-                        .limit(limit)\
-                        .offset(offset).all()
-
-        total = db.session.query(LabelHistory)\
-                        .filter_by(user_id=user_id)\
-                        .count() 
-       
-        for label in label_logs: 
-            label.username = username 
-            text = db.session.query(Tweet)\
-                     .filter_by(tweet_id=label.tweet_id)\
-                     .first().text
-         
-            label.tweet_text = text
-
-        return render_template("my_labels.html",
-            username=session["username"], 
-            label_logs=label_logs, 
-            limit=limit,
-            page=page, 
-            offset=offset,
-            total=total,
-            session=session
-        )
-    else: 
-        return render_template("splash.html")
-
-@app.route("/create_user") 
-def create_user():
-    if 'username' in session:
-        if session['role'] == 1: 
-            return render_template("create_user.html",
-                username=session["username"],
-                session=session)
-        else: 
-            return "You are not permitted in this page. Sorry." 
-    else: 
-        return render_template("splash.html")
-
-
-@app.route("/view_users")
-def view_users(): 
-    if 'username' in session: 
-        from app.models import User 
-        from app.models import Tweet
-        from app import db
-        users = db.session.query(User)\
-                  .all() 
-        
-        
-        for user in users: 
-            nlabels = Tweet.query.filter_by(labeller=user.id).count()
-            user.nlabels = nlabels 
-
-        return render_template("view_users.html",
-            username=session["username"],
-            users=users,
-            session=session
-        )
-    else: 
-        return render_template("splash.html")
-
-# ------------------ API FUNCTIONS ----------------- #
-
-# /api/label_status - label status of the tweets
-@app.route("/api/label_status")
-def api_label_status(): 
-    if 'username' in session: 
-        from app import db
-        from app.models import Tweet 
-        from app.models import User
-        
-        # count number of labelled and unlabelled tweets 
-        total_tweets = db.session.query(Tweet).count()
-        labelled_tweets = db.session.query(Tweet).filter(getattr(Tweet, "sentiment").isnot(None)).count() 
-        unlabelled_tweets = total_tweets - labelled_tweets
-        discard_tweets = db.session.query(Tweet).filter(getattr(Tweet, "sentiment").is_(-2)).count()
-        sarcasm_tweets = db.session.query(Tweet).filter(getattr(Tweet, "sentiment").is_(2)).count()
-
-
-        # breakdown of sentiment labels
-        positive_tweets = db.session.query(Tweet).filter_by(sentiment=1).count() 
-        negative_tweets = db.session.query(Tweet).filter_by(sentiment=-1).count() 
-        neutral_tweets = db.session.query(Tweet).filter_by(sentiment=0).count() 
-    
-        # labelled by term
-        positive_tweets_by_term = \
-            db.session.query(Tweet.search_term, db.func.count(Tweet.sentiment))\
-              .filter_by(sentiment=1).group_by(Tweet.search_term).all() 
-        negative_tweets_by_term = \
-            db.session.query(Tweet.search_term, db.func.count(Tweet.sentiment))\
-              .filter_by(sentiment=-1).group_by(Tweet.search_term).all() 
-        neutral_tweets_by_term = \
-            db.session.query(Tweet.search_term, db.func.count(Tweet.sentiment))\
-              .filter_by(sentiment=0).group_by(Tweet.search_term).all()
-
-        # labelled by language 
-        positive_tweets_by_language = \
-            db.session.query(Tweet.language, db.func.count(Tweet.sentiment))\
-              .filter_by(sentiment=1).group_by(Tweet.language).all() 
-        negative_tweets_by_language = \
-            db.session.query(Tweet.language, db.func.count(Tweet.sentiment))\
-              .filter_by(sentiment=-1).group_by(Tweet.language).all() 
-        neutral_tweets_by_language = \
-            db.session.query(Tweet.language, db.func.count(Tweet.sentiment))\
-              .filter_by(sentiment=0).group_by(Tweet.language).all() 
-
-        # no of labels per user 
-        users = User.query.all()
-        label_counts = {}
-        for user in users:
-            id = user.id 
-            username = user.username 
-            label_counts[username] = \
-                Tweet.query.filter_by(labeller=id).count()
-        
-
-        
-        payload = {
-            "by_language" : {
-                "positive" : dict(positive_tweets_by_language), 
-                "negative" : dict(negative_tweets_by_language), 
-                "neutral" : dict(neutral_tweets_by_language) 
-            }, 
-            "by_term" : {
-                "positive" : dict(positive_tweets_by_term), 
-                "negative" : dict(negative_tweets_by_term), 
-                "neutral" :  dict(neutral_tweets_by_term)
-            }, 
-            "all" : {
-                "positive" :  positive_tweets, 
-                "negative" :  negative_tweets, 
-                "neutral" :   neutral_tweets
-            }, 
-            "meta" : {
-                "unlabelled" : unlabelled_tweets, 
-                "labelled" :   labelled_tweets, 
-                "total" :      total_tweets, 
-                "discards" : discard_tweets, 
-                "sarcasms" : sarcasm_tweets
-            },
-            "label_counts" : label_counts
-        }
-
-
-        return payload
-
-@app.route("/api/get_random_unlabelled_tweet")
-def api_get_random_tweet(): 
-    if 'username' in session: 
-        from app import db 
-        from app.models import Tweet 
-        
-        result = Tweet.query.filter(getattr(Tweet, "sentiment").is_(None)).order_by(db.func.random()).first()
-        reasons = Tweet.query.group_by(Tweet.reason_for_sentiment).all()
-        reasons = [res.reason_for_sentiment for res in reasons]
-        reasons.remove(None)
-
-        print(reasons)
-
-        return { 
-            "tweet" : [
-                result.tweet_id, 
-                result.author, 
-                result.text, 
-                result.search_term, 
-                result.dataset_domain
-            ], 
-            "reasons" : reasons
-        }
-
-
-@app.route("/api/get_specific_tweet")
-def api_get_specific_tweet(): 
-    if 'username' in session: 
-        from app import db 
-        from app.models import Tweet 
-        id = request.args.get("tweet_id", None)
-        
-        
-        result = Tweet.query.filter(getattr(Tweet, "tweet_id").is_(id)).all()
-        reasons = Tweet.query.group_by(Tweet.reason_for_sentiment).all()
-        reasons = [res.reason_for_sentiment for res in reasons]
-        reasons.remove(None)
-
-        if(len(result) == 0):
-            return "No tweet found"
-        else: 
-            return  { 
-            "tweet" : [
-                result[0].tweet_id,
-                result[0].author, 
-                result[0].text, 
-                result[0].search_term, 
-                result[0].dataset_domain
-            ], 
-            "reasons" : reasons
-        }
-
-
-@app.route("/api/submit_label", methods=["POST"])
-def api_submit_label(): 
-    if 'username' in session: 
-        from app import db 
-        from app.models import Tweet 
-        from app.models import LabelHistory 
-        from app.models import User 
-        username = session["username"]
-        user_id = User.query.filter_by(username=username).first().id
-        sentiment = request.json["sentiment"]
-        reason_for_sentiment = request.json["reason_for_sentiment"]
-        tweet_id = request.json["tweet_id"] 
-        print((username, user_id, sentiment, reason_for_sentiment, tweet_id))
-
-        tweet = Tweet.query.filter_by(tweet_id=tweet_id).first()
-        tweet.sentiment = sentiment 
-        tweet.reason_for_sentiment = reason_for_sentiment 
-        tweet.labeller = user_id
-
-        label_history = LabelHistory(user_id=user_id, sentiment=sentiment,
-                                     reason_for_sentiment=reason_for_sentiment,
-                                     tweet_id=tweet_id)
-
-        try:
-            db.session.add(label_history)
-            db.session.add(tweet)
+        action = request.json.get("action")
+        data = request.json.get("data")
+        user_id = User.query.filter_by(username=session["username"])[0].id
+        if action == "update_account_information": 
+            target_user = User.query.filter_by(id=user_id).all()[0]
+            target_user.username = data["username"]
+            target_user.first_name = data["first_name"] 
+            target_user.last_name = data["last_name"]
+            target_user.bio = data["bio"]
+            target_user.avatar = data["avatar"] 
+            db.session.add(target_user)
             db.session.commit()
-            return {
-                "state" : "successful"
-            }
-        except E: 
-            return {
-                "state" : "unsuccessful"
-            }
-
-
-@app.route("/api/create_user", methods=["POST"])
-def api_create_user(): 
-    if 'username' in session: 
-        if session['role'] == ADMIN:  
-            from app import db 
-            from app.models import User 
-            user = request.json.get('user', {})
-            new_user = User(
-                username=user["username"], 
-                first_name=user["first_name"], 
-                last_name=user["last_name"], 
-                password=user["password"], 
-                role=user["role"]
-            )
-            db.session.add(new_user)
-            db.session.commit()
-
-            return "success"
-        else: 
-            return "You are not allowed to access this resource."
+        return data
     else: 
         return "You are not allowed to access this resource."
 
-@app.route("/api/delete_user", methods=["POST"]) 
-def api_delete_user(): 
+# /verify_password - verifies if a payload password matches the current password
+# of the user that is logged in
+@app.route("/change_password", methods=["POST"])
+def change_password():
     if 'username' in session: 
-        if session['role'] == ADMIN:
-            from app import db 
-            from app.models import User
-            user_id = request.json.get("id") 
-            User.delete.filter_by(user_id=user_id)
-            return "success"
+        current_password = request.json.get("current_password")
+        new_password = request.json.get("new_password")
+        confirm_password = request.json.get('confirm_new_password')
+        
+        user = User.query.filter_by(username=session["username"]).all()[0]
+        user_password = user.password
+
+        if current_password == user_password: 
+            if new_password == confirm_password:
+                user.password = new_password 
+                db.session.add(user)
+                db.session.commit()
+                return {
+                    "result" : "Successfully updated passwords", 
+                    "type" : "success"
+                }
+            else: 
+                return {
+                    "result" : "New passwords do not match.", 
+                    "type" : "error"
+                }
         else: 
-            return "You are not allowed to access this resource."
+            return {
+                "result": "Wrong current password.",
+                "type" : "error"
+            }
+    else: 
+        return "You are not allowed to access this resource."
+
+
+# /users - lists down details of all users 
+@app.route("/users")
+def users(): 
+    if 'username' in session: 
+        users = User.query.order_by(User.role.desc()).all()
+        return render_template("users.html", 
+            users = users, 
+            user = UserClass.get_user(session["username"]),
+            session = session
+        )
+    else: 
+        return "You are not allowed to access this resource."
+
+# --------------------- DATASET ------------------------# 
+
+# /view_tweets - a timeline like display of all the tweets 
+# together with attached labels from the two raters
+@app.route("/view_tweets")
+def view_tweets(): 
+    if 'username' in session:
+        page = request.args.get("page", "1") 
+        page_size = 10
+        query = Tweet.query
+        qstr = request.args.get("q", "")
+        print(qstr)
+        dq = query
+        if len(qstr) > 0:
+            middle = Tweet.text.like('% '+qstr+' %') 
+            first = Tweet.text.like(qstr+' %')
+            last = Tweet.text.like(qstr+' %')
+
+            from sqlalchemy import or_
+            query = query.filter(or_(middle, first, last))
+            dq = query
+        
+        query = query.order_by(Tweet.author.asc())
+
+        if page_size: 
+            query = query.limit(page_size) 
+        if page: 
+            query = query.offset((int(page)-1)*page_size)
+
+    
+        tweets = query.all()
+        tweet_count = dq.count()
+
+        return render_template("view_tweets.html",
+            qstr = qstr, 
+            tweets = tweets, 
+            tweet_count = tweet_count,
+            user = UserClass.get_user(session["username"]), 
+            session = session,
+            page = page
+        )
+    else: 
+        return "You are not allowed to access this resource"
+
+
+# /label_tweets - allows the user to label a specific tweet
+@app.route("/label_tweets")
+def label_tweets(): 
+    if 'username' in session:
+        return render_template("label_tweets.html", 
+            user = UserClass.get_user(session["username"]), 
+            session = session
+        )
+    else: 
+        return "You are not allowed to access this resource"
+
+
+@app.route("/label_tweets/tweet_to_label")
+def label_tweets_get_to_label(): 
+    if 'username' in session:
+        tweet = UserClass.get_tweet_to_label(session["username"]) 
+        id = tweet.instance_id 
+        text = tweet.text
+        author = tweet.author
+        return {
+            "id" : id, 
+            "text" : text, 
+            "author" : author
+        }
+    else: 
+        return "You are not allowed to access this resource"
+
+@app.route("/label_tweets/reasons")
+def label_tweets_reasons(): 
+    if 'username' in session: 
+        reasons = Reason.query.all() 
+        reasons_list = [] 
+        for reason in reasons: 
+            reasons_list.append({
+                "id" : reason.reason_id, 
+                "reason" : reason.reason
+            })
+        return json.dumps(reasons_list)
+    else:
+        return "You are not allowed to access this resource"
+
+
+@app.route("/label_tweets/label", methods=["POST"])
+def label_tweets_label(): 
+    if 'username' in session:
+        username = session["username"]
+        id = request.json.get("id")
+        reason = request.json.get("reason")
+        new = request.json.get("new") 
+        sentiment = request.json.get("sentiment")
+
+        # get the user id of the current user 
+        user = User.query.filter_by(username=username).all()[0]
+        user_id = user.id
+
+        # retrieve the sentiment code of the current 
+        # sentiment 
+        sent_code = -1
+        if sentiment == "negative": 
+            sent_code = NEGATIVE 
+        elif sentiment == "neutral":
+            sent_code = NEUTRAL 
+        elif sentiment == "positive":
+            sent_code = POSITIVE
+        elif sentiment == "sarcasm":
+            sent_code = SARCASM 
+        elif sentiment == "discard":
+            sent_code = DISCARD
+
+        print(request.json)
+        print("Sent. Code: " + str(sent_code))
+
+        # if reason is a new reason add it to the
+        # reasons table 
+        if new: 
+            new_reason = Reason() 
+            new_reason.reason = reason 
+            new_reason.description = "To be described"
+
+            db.session.add(new_reason)
+            db.session.commit() 
+
+        # retrieve the reason code 
+        # of the current reason for sentiment
+        reason = Reason.query.filter_by(reason=reason)
+        reason_id = reason.all()[0].reason_id 
+        print("Reason Code: " + str(int(reason_id))) 
+
+ 
+        label = Labels()
+        label.tweet_id = id 
+        label.user_id = user_id
+        label.sentiment = sent_code 
+        label.reason_for_sentiment = reason_id 
+
+        db.session.add(label)
+        db.session.commit()
+        
+        # update the last labelled idx of user 
+        user.last_labelled_id +=1 
+        db.session.add(user)
+        db.session.commit()
+        
+        return {
+            "state" : "successful",
+            "label_count" : user.last_labelled_id
+        }
+    else: 
+        return "You are not allowed to access this resource"
+
+
+
+@app.route("/label_tweets/edit_label_x", methods=["POST"])
+def label_tweets_edit_label(): 
+    if 'username' in session:
+        username = session["username"]
+        id = request.json.get("id")
+        reason = request.json.get("reason")
+        new = request.json.get("new") 
+        sentiment = request.json.get("sentiment")
+
+        # get the user id of the current user 
+        user = User.query.filter_by(username=username).all()[0]
+        user_id = user.id
+
+        # retrieve the sentiment code of the current 
+        # sentiment 
+        sent_code = -1
+        if sentiment == "negative": 
+            sent_code = NEGATIVE 
+        elif sentiment == "neutral":
+            sent_code = NEUTRAL 
+        elif sentiment == "positive":
+            sent_code = POSITIVE
+        elif sentiment == "sarcasm":
+            sent_code = SARCASM 
+        elif sentiment == "discard":
+            sent_code = DISCARD
+
+        print(request.json)
+        print("Sent. Code: " + str(sent_code))
+
+        # if reason is a new reason add it to the
+        # reasons table 
+        if new: 
+            new_reason = Reason() 
+            new_reason.reason = reason 
+            new_reason.description = "To be described"
+
+            db.session.add(new_reason)
+            db.session.commit() 
+
+        # retrieve the reason code 
+        # of the current reason for sentiment
+        reason = Reason.query.filter_by(reason=reason)
+        reason_id = reason.all()[0].reason_id 
+        print("Reason Code: " + str(int(reason_id))) 
+
+        label = Labels.query.filter_by(user_id=user_id,tweet_id=id).all()[0]
+        label.user_id = user_id
+        label.sentiment = sent_code 
+        label.reason_for_sentiment = reason_id
+        db.session.add(label)
+        db.session.commit()
+
+    
+        
+        return {
+            "state" : "successful",
+            "label_count" : user.last_labelled_id
+        }
+     
+        
+        return {
+            "state" : "successful",
+            "label_count" : user.last_labelled_id
+        }
+    else: 
+        return "You are not allowed to access this resource"
+
+
+@app.route("/my_labels")
+def my_labels(): 
+    if 'username' in session: 
+        return render_template("my_labels.html", 
+            user = UserClass.get_user(session["username"]),
+            session = session
+        )
+    else: 
+        return "You are not allowed to access this resource"
+
+@app.route("/my_labels/get_labels")
+def my_labels_get_labels(): 
+    if 'username' in session: 
+        username = session['username']
+        user = User.query.filter_by(username=username).all()[0]
+        user_id = user.id 
+        limit = 5
+        page = int(request.args.get("page", 1)) - 1
+        labels = Labels.query.filter_by(user_id=user_id) 
+        label_count = labels.count()
+        labels = labels.limit(limit)
+        labels = labels.offset(page*limit) 
+
+        
+        labels_ = [] 
+        for label in labels: 
+            label_dict = {
+                "user_id" : label.user_id, 
+                "instance_id" : label.tweet_id, 
+                "tweet" : TweetClass.get_tweet_dict(label.tweet_id),
+                "sentiment" : int(label.sentiment), 
+                "reason_for_sentiment" : label.reason_for_sentiment, 
+                "created_at" : label.created_at , 
+                "updated_at" : label.updated_at
+            }
+            labels_.append(label_dict)
+
+        sentiments_ = sent_names 
+        reasons_ = ReasonClass.get_reasons()
+
+        pload = {
+            "labels" : labels_, 
+            "sentiments" : sentiments_, 
+            "reasons" : reasons_, 
+            "label_count" : label_count,
+            "page" : page + 1
+        }
+
+
+        return pload
+
+    else: 
+        return "You are not allowed to access this resource"
+
+
+@app.route("/edit_label")
+def edit_label():
+    if 'username' in session: 
+        id = request.args.get("id")
+        tweet = Tweet.query.filter_by(instance_id=id).all()[0]
+        text = tweet.text
+        author = tweet.author
+        
+
+        return render_template("edit_label.html", 
+            user = UserClass.get_user(session["username"]), 
+            session = session,
+            id = id, 
+            author = author, 
+            text = text
+        )
+    else: 
+        return "You are not allowed to access this resource"
+
+
+@app.route("/number_stats")
+def number_stats(): 
+    if 'username' in session: 
+        all_labels = Labels.query.all() 
+        
+        ID = 0 
+        SENTIMENT = 1
+        USER = 2
+
+        # TALLIES
+        tally_by_user = {
+            1: {}, 
+            2: {}
+        } 
+        for label in all_labels:
+            tally_by_user[label.user_id][label.tweet_id] = label.sentiment 
+
+        # COHEN'S KAPPA
+        minv = min([len(tally_by_user[1]), len(tally_by_user[2])])
+        y1 = list(tally_by_user[1].values())[0:minv]
+        y2 = list(tally_by_user[2].values())[0:minv]
+        kappa = cohen_kappa_score(y1, y2)
+        
+        label_counts = {
+            1 : len(tally_by_user[1]), 
+            2 : len(tally_by_user[2])
+        }
+
+        import pprint as pp
+
+        # CONFUSION MATRIX
+        cm = LabelClass.confusion_matrix(y1, y2)
+        pp.pprint(cm)
+
+        return render_template("number_stats.html", 
+            user = UserClass.get_user(session["username"]), 
+            session = session,
+            label_counts = label_counts,
+            kappa = kappa, 
+            kappa_count = minv,
+            cm = cm,
+            names = list(sent_names.values())
+        )
     else: 
         return "You are not allowed to access this resource"

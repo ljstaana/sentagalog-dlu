@@ -1,0 +1,191 @@
+{% extends "layouts/topbar.html" %} 
+
+{% block topbar %}
+    {% include "sections/topbar.html" %}
+{% endblock %}
+
+
+{% block main_content %}
+    <div class="dashboard-content label_tweets" id="label_tweets" style="z-index: 1">
+
+        <h4>Label Tweets</h4> 
+        Please remember that your goal is to identify how the author of this
+        tweet feels and not how you feel. 
+        <br /><br />
+        <div class="card">
+            <a>@[[tweet_to_label.author]]</a>
+            [[tweet_to_label.text]] 
+        </div>
+        <br />
+        <div align="center">
+            <button class="btn btn-secondary" 
+                    :class="{ 'btn-primary' : (sent == 'negative') }"
+                    @click='sent = "negative"'>
+                Negative
+            </button>
+            <button class="btn btn-secondary" 
+                    :class="{ 'btn-primary' : (sent == 'neutral') }"
+                    @click='sent = "neutral"'>
+                Neutral
+            </button>
+            <button class="btn btn-secondary" 
+                   :class="{ 'btn-primary' : (sent == 'positive') }"
+                   @click='sent = "positive"'>
+                Positive
+            </button>
+            <button class="btn btn-secondary" 
+                    :class="{ 'btn-primary' : (sent == 'sarcasm') }"
+                    @click='sent = "sarcasm"'>
+                Sarcasm
+            </button>
+            <button class="btn btn-secondary" 
+                :class="{ 'btn-primary' : (sent == 'discard') }"
+                @click='sent = "discard"'>
+                Discard
+            </button>
+        </div>
+        <br />
+        <b>Reason</b>
+        <div class="flex">
+            <div style="flex:60%">
+                <select @change="sel_reason" class="form-input" v-model="stype" style="display: block;margin-top:5px;" >
+                    <option v-for="reason in reasons">[[reason.reason]]</option>
+                    <option selected>Others</option>
+                </select><br />
+                <input type="text" v-model="others" class="form-input" placeholder="Reason (Others)" v-show="others_dis">
+            </div>
+            <div style="flex:30%;" align="center">
+                <button class="btn btn-primary" @click="label" style="width: 100%;" >Label</button>
+            </div>
+        </div>
+
+    </div> 
+  
+    <style scoped>
+
+            .dashboard-content {
+                padding: 10px;
+                margin-top: 20px;
+            }
+
+            .dashboard-content h3 {
+                font-size: 22px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            a:hover {
+                text-decoration: none;
+            }
+
+            .searchbox {
+                margin: 10px;
+                width: 80%;
+                margin: 10px auto;
+            }
+
+            .controls * {
+                display: inline-block;
+            }
+
+            #label_tweets button {
+                margin: 5px;
+            }
+
+
+
+        </style>
+
+    <script>
+        let vm = new Vue({
+            el: "#label_tweets", 
+            data: {
+                tweet_to_label : {
+                    text: "",
+                    id: "",
+                    author: ""
+                },
+                sent: 'negative',
+                stype: "",
+                reason: "", 
+                others_dis : false,
+                others: "",
+                reasons: ["Others"],
+                server_response: null
+            },
+            methods: {
+                sel_reason() {
+                    if(this.stype == "Others") {
+                        this.others_dis = true
+                    } else {
+                        this.others_dis = false
+                        this.reason = this.stype
+                    }
+                },
+                label() {
+                    let self = this;
+                   if(this.others_dis) {
+                       this.reason = this.others
+                   } else {
+                       this.reason = this.stype
+                   }
+
+                   let label_data = {
+                       id : this.tweet_to_label.id, 
+                       sentiment: this.sent,
+                       reason : this.reason, 
+                       new : this.others_dis
+                   }
+
+                   console.log(label_data);
+                   console.log("Sending data to server.")
+                   axios.post("/label_tweets/label", label_data)
+                        .then(res => {
+                            self.reason = "" 
+                            self.others = ""
+                            $("#label_count").html(res.data.label_count)
+                            axios.get("label_tweets/tweet_to_label")
+                                .then(res => {
+                                    self.tweet_to_label = res.data
+                                    self.sent = ""
+                                    self.stype = ""
+                                })
+                                .catch(err => {
+                                    alert("There was an error in retrieving the tweet that you should label")
+                                })
+                            axios.get("label_tweets/reasons")
+                                .then(res => {
+                                    self.reasons = res.data
+                                })
+                                .catch(err => {
+                                    alert("There was an error in retrieving the items for the reasons list.")
+                                })
+                        })
+                        .catch(err => {
+                            alert("There was an error submitting your label.")
+                        })
+                }
+            },
+            mounted() {
+                let self = this
+                axios.get("label_tweets/tweet_to_label")
+                     .then(res => {
+                        self.tweet_to_label = res.data
+                     })
+                     .catch(err => {
+                        alert("There was an error in retrieving the tweet that you should label")
+                     })
+                axios.get("label_tweets/reasons")
+                     .then(res => {
+                         self.reasons = res.data
+                     })
+                     .catch(err => {
+                         alert("There was an error in retrieving the items for the reasons list.")
+                     })
+            },
+            delimiters : ["[[", "]]"]
+        })
+    </script>
+{% endblock %}

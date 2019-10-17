@@ -4,25 +4,45 @@
 
     <!-- Main Splash Screen Content -->
     <div class="content-container" id="app">
+        
+        <!-- Title Part -->
         <div class="logo-container">
             <h1>SenTagalog DLU</h1>
             <a>SenTagalog Data Labelling Utility</a>
         </div>
-        <div class="login-form">
+
+        <!-- Login Form -->
+        <div class="login-form form-group">
             <br />
-            <input v-model="username" type="text" placeholder="Username">
+            <input v-model="username"
+                   type="text" 
+                   placeholder="Username"
+                   class="form-input">
             <br />
-            <input v-model="password" type="password" placeholder="Password">
+            <input v-model="password" 
+                   type="password" 
+                   placeholder="Password"
+                   class="form-input">
             <br />
-            <button @click="authenticate">Authenticate</button>
+            <button @click="authenticate"
+                    class="btn btn-primary input-group-btn">
+                Authenticate
+            </button>
             <div v-if="error">
                 <div v-if="error" class="error_message">
-                    [[err_msg]]
+                    <div class="toast toast-error">
+                        <button class="btn btn-none float-right"></button>
+                            [[err_msg]]
+                        
+                    </div>
                 </div>
             </div>
             <div v-if="notifier">
                 <div v-if="notifier" class="notifier_message">
-                    [[notifier_msg]]
+                    <div class="toast toast-primary">
+                    <button class="btn btn-loading  float-right"></button>
+                        [[notifier_message]]
+                    </div> 
                 </div>
             </div>
         </div>
@@ -45,6 +65,12 @@
                 height: 100%;
                 margin-top: 30%
             }
+
+      
+        }
+
+        .btn.btn-none.float-right {
+            display: none;
         }
 
         @media screen and (min-width: 720px) {
@@ -57,9 +83,22 @@
                 display: hidden;
                 margin-top: 150px;
             }
+
+            
         }
 
-           
+        .login-form {
+            width: 250px;
+            margin: 0 auto;
+        }
+
+        a:hover {
+            text-decoration: none;
+        }
+
+        input {
+            text-align: center;
+        }
 
         .content-container .logo-container h1 {
             margin: 0;
@@ -70,9 +109,7 @@
         }
         
         .error_message {
-            border: 2px solid #ff0000;
-            color: red;
-            width: 50%;
+            width: 100%;
             text-align: center; 
             margin: 30px auto;
             border-radius: 5px;
@@ -80,9 +117,8 @@
         }
 
         .notifier_message {
-            border: 2px solid rgb(33, 42, 155);
-            color:  rgb(33, 42, 155);
-            width: 50%;
+    
+            width: 100%;
             text-align: center; 
             margin: 30px auto;
             border-radius: 5px;

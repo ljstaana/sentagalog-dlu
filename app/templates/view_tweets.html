@@ -1,0 +1,140 @@
+{% extends "layouts/topbar.html" %} 
+
+{% block topbar %}
+    {% include "sections/topbar.html" %}
+{% endblock %}
+
+
+{% block main_content %}
+    <div class="dashboard-content profile" id="view_tweets" style="z-index: 1">
+
+        <h4>View Tweets</h4> 
+
+        <br />
+        <input type="text" v-model="query" class="form-input searchbox" placeholder="Search">
+        <p align="center">
+            <button class="btn btn-primary" @click="search">Search</button>
+        </p>
+        <br />
+
+
+
+
+        {{tweet_count}} results |
+        {{(tweet_count//10+1)}} pages | 
+        Page {{page}}
+        <br /><br />
+        {% for tweet in tweets: %}
+            <div class="card">
+                <a>@{{tweet.author}}</a>
+                {{tweet.text}}
+                <br /><br />
+                <table class="table">
+                    <tr>
+                        <td><b>Search Term</b></td>
+                        <td>{{tweet.search_term}}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Dataset Domain</b></td>
+                        <td>{{tweet.dataset_domain}}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Language</b></td>
+                        <td>{{tweet.language}}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Instance ID</b></td>
+                        <td>{{tweet.instance_id}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <br />
+        {% endfor %}
+        <div class="controls" align="center" style="width:300px;margin: 0 auto;" >
+            <table>
+                <tr>
+                    <td> 
+                        <button class="btn" @click='prev'>
+                            <i class="icon icon-back"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <input type="number" class="form-input" v-model="page" style="width: 100px;">
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" @click="go"> 
+                            <i class="icon icon-search"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn"  @click='next'>
+                            <i class="icon icon-forward" ></i>
+                        </button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div> 
+  
+    <style scoped>
+
+            .dashboard-content {
+                padding: 10px;
+                margin-top: 20px;
+            }
+
+            .dashboard-content h3 {
+                font-size: 22px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            a:hover {
+                text-decoration: none;
+            }
+
+            .searchbox {
+                margin: 10px;
+                width: 80%;
+                margin: 10px auto;
+            }
+
+            .controls * {
+                display: inline-block;
+            }
+          
+        </style>
+
+    <script>
+        new Vue({
+            el: "#view_tweets", 
+            data: {
+                query: "{{qstr}}",
+                page:  "{{page}}",
+                skipto: 0
+            },
+            methods: {
+                search(){
+                    location="/view_tweets?q=" + this.query + "&page=1"
+                },
+                next() {
+                    console.log("dsfsd")
+                    location="/view_tweets?q=" + this.query + "&page={{(page|int) + 1}}"
+                },
+                prev() {
+                    if(this.page <= 1)
+                        return; 
+
+                    console.log("dsfsd")
+                    location="/view_tweets?q=" + this.query + "&page={{(page|int) - 1}}"
+                },
+                go() {
+                    location="/view_tweets?q={{qstr}}&page=" + this.page
+                }
+            }
+        })
+    </script>
+{% endblock %}
