@@ -21,43 +21,15 @@
                 <td>Volunteer 2</td>
                 <td>{{label_counts[2]}} tweets</td>
             </tr>
+            <tr>
+                <td>Volunteer 3</td>
+                <td>{{label_counts[3]}} tweets</td>
+            </tr>
         </table>
         <br />
         <h3>Kappa Score</h3>
-        <h5>{{kappa}} at {{kappa_count}} tweets</h5> 
-        <br />
-        <h5>Confusion Matrix</h5>
-        <table class="table">
-             <tr>   
-                 <td></td>
-                 {% for row in names: %}
-                    <td>{{row}}</td>
-                 {% endfor %}
-             </tr>
-             {% for row in cm %}
-             <tr>
-                 <td>{{names[loop.index-1]}}</td>
-                 {% for cell in row %}
-                    <td>{{cell}}</td> 
-                 {% endfor %}
-             </tr>
-             {% endfor %}
-        </table>
-
-        <br />
-        <h5>Tweets (by Topic)</h5>
-        View the entire report at this <a href="/dataset_report.html" target="_blank">page</a>
-        <ul>
-            <li v-for="topic,index in topics">[[index]]
-                <ul>
-                    <li v-for="subset,subset_idx in topic">[[subset_idx]]
-                        <ul style="column-count:3"> 
-                            <li v-for="term,term_idx in subset">[[term]]</li>
-                        </ul>
-                    </li>
-                </ul>
-            </li>
-        </ul>
+        <h6>{{kappa}} at {{kappa_count}} tweets</h6> 
+        
     </div> 
   
     <style scoped>

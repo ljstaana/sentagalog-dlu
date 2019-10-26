@@ -4,7 +4,28 @@ from flask import Flask, session, render_template, url_for, request, redirect
 from app.classes import UserClass, ReasonClass, TweetClass, LabelClass
 from app.models import User, Tweet, Labels, Reason
 from app import db
+import numpy as np
 from sklearn.metrics import cohen_kappa_score
+
+
+def fleiss_kappa(M):
+  """
+  See `Fleiss' Kappa <https://en.wikipedia.org/wiki/Fleiss%27_kappa>`_.
+  :param M: a matrix of shape (:attr:`N`, :attr:`k`) where `N` is the number of subjects and `k` is the number of categories into which assignments are made. `M[i, j]` represent the number of raters who assigned the `i`th subject to the `j`th category.
+  :type M: numpy matrix
+  """
+  N, k = M.shape  # N is # of items, k is # of categories
+  n_annotators = float(np.sum(M[0, :]))  # # of annotators
+
+  p = np.sum(M, axis=0) / (N * n_annotators)
+  P = (np.sum(M * M, axis=1) - n_annotators) / (n_annotators * (n_annotators - 1))
+  Pbar = np.sum(P) / N
+  PbarE = np.sum(p * p)
+
+  kappa = (Pbar - PbarE) / (1 - PbarE)
+
+  return kappa
+
 
 ADMIN = 1
 VOLUNTEER = 2
@@ -472,28 +493,41 @@ def number_stats():
         # TALLIES
         tally_by_user = {
             1: {}, 
-            2: {}
+            2: {},
+            3: {}
         } 
         for label in all_labels:
             tally_by_user[label.user_id][label.tweet_id] = label.sentiment 
 
         # COHEN'S KAPPA
-        minv = min([len(tally_by_user[1]), len(tally_by_user[2])])
+        minv = min([len(tally_by_user[1]), len(tally_by_user[2]), len(tally_by_user[1])])
         y1 = list(tally_by_user[1].values())[0:minv]
         y2 = list(tally_by_user[2].values())[0:minv]
-        kappa = cohen_kappa_score(y1, y2)
+        y3 = list(tally_by_user[3].values())[0:minv]
+
+        ratings = [
+            y1,y2,y3
+        ]
         
         label_counts = {
             1 : len(tally_by_user[1]), 
-            2 : len(tally_by_user[2])
+            2 : len(tally_by_user[2]),
+            3 : len(tally_by_user[3])
         }
 
+        matrix = np.zeros((minv, 5))
+
+        for i in range(minv): 
+            for j in range(len(ratings)):
+                rating = ratings[j][i]
+                matrix[i][rating] += 1
+
+        kappa = fleiss_kappa(matrix)
+
         import pprint as pp
-
-        # CONFUSION MATRIX
-        cm = LabelClass.confusion_matrix(y1, y2)
-        pp.pprint(cm)
-
+      
+        cm = []
+ 
         return render_template("number_stats.html", 
             user = UserClass.get_user(session["username"]), 
             session = session,
