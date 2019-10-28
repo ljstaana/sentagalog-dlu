@@ -57,11 +57,13 @@
                                     <i class="icon icon-copy"></i> My Labels 
                                     </a>
                                 </li>
-                                <li class="menu-item">
-                                    <a href="#">
-                                    <i class="icon icon-download"></i> Download Dataset
-                                    </a>
-                                </li>
+                                {% if user["role"] == 1 %}
+                                    <li class="menu-item" @click="location='download_dataset'">
+                                        <a href="#">
+                                        <i class="icon icon-download"></i> Download Dataset
+                                        </a>
+                                    </li>
+                                {% endif %}
 
                                 <!--NUMBERS AND FIGURES-->
                                 <li class="divider" data-content="NUMBERS AND FIGURES">

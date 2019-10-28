@@ -550,3 +550,30 @@ def charts():
         )
     else: 
         return "You are not allowed to access this resource"
+
+@app.route("/download_dataset")
+def download_dataset(): 
+    if 'username' in session: 
+        
+        labels = Labels.query.all() 
+
+        tweets = {}
+        for label in labels: 
+            tweets[label.tweet_id] = {
+                "labels" : {}, 
+                "tweet" : Tweet.query.filter_by(instance_id=label.tweet_id).all()[0].text
+            }
+
+        for label in labels: 
+            tweets[label.tweet_id]["labels"][label.user_id] = label.sentiment
+
+        print(tweets)
+
+        return render_template("download_dataset.html",
+            user = UserClass.get_user(session["username"]), 
+            session = session,
+            labels = labels,
+            tweets = tweets
+        )
+    else: 
+        return "You are not allowed to access this resource"

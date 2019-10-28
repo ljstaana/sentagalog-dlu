@@ -1,0 +1,52 @@
+{% extends "layouts/topbar.html" %} 
+
+{% block topbar %}
+    {% include "sections/topbar.html" %}
+{% endblock %}
+
+
+{% block main_content %}
+    <div class="dashboard-content">
+        <h3>View Labels</h3>
+        <br /> 
+        <br />
+        <h5>Legend</h5>
+        <ul>
+            <li>0 - Negative</li>
+            <li>1 - Neutral</li>
+            <li>2 - Positive</li>
+            <li>3 - Sarcasm</li>
+            <li>4 - Discard</li>
+        </ul>
+        <table class="table">
+            <tr>
+                <th>ID</th>
+                <th>Tweet</th>
+                <th>Volunteer 1</th>
+                <th>Volunteer 2</th>
+                <th>Volunteer 3</th>
+            </tr>
+            {% for label in tweets: %} 
+                <tr>
+                    <td>{{label}}</td>
+                    <td>{{tweets[label].tweet}}</td> 
+                    <td>{{tweets[label].labels[1]}}</td>
+                    <td>{{tweets[label].labels[2]}}</td>
+                    <td>{{tweets[label].labels[3]}}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    <style>
+        .dashboard-content {
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .dashboard-content h3 {
+            font-size: 22px;
+        }
+
+        .dashboard-content input {
+            z-index: 1;
+        }
+    </style>
+{% endblock %}
